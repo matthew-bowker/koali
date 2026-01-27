@@ -109,7 +109,7 @@
 
     <h2>What data does Koali collect?</h2>
     <p>None. Zero. Absolutely nothing.</p>
-    <p>Koali runs entirely in your browser. There is no server. There are no analytics. There are no cookies, no tracking pixels, no fingerprinting, no "anonymous usage statistics", and no "we only collect what we need to improve your experience". There is nothing.</p>
+    <p>Koali runs entirely in your browser. There is no backend server processing your data. There are no analytics. There are no cookies, no tracking pixels, no fingerprinting, no "anonymous usage statistics", and no "we only collect what we need to improve your experience". There is nothing.</p>
 
     <h2>What about my research data?</h2>
     <p>Your documents, codes, notes, and everything else you create in Koali live in a folder on your computer. That's it. They never leave. They are not uploaded, synced, backed up, phoned home, or otherwise transmitted anywhere by Koali.</p>
@@ -117,18 +117,22 @@
 
     <h2>What Koali does not have</h2>
     <ul class="checklist">
-      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No servers</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No backend server</li>
       <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No databases</li>
       <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No user accounts</li>
       <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No cookies</li>
       <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No analytics or tracking</li>
       <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No third-party scripts</li>
-      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No network requests of any kind</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No network requests after page load</li>
       <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No way for me to know you exist</li>
     </ul>
 
+    <h2>Hosting and delivery</h2>
+    <p>Koali is hosted on <strong>GitHub Pages</strong> and served through <strong>Cloudflare</strong>. When you load the page, your browser makes standard HTTPS requests to fetch the HTML, CSS, and JavaScript files. During this process, GitHub and Cloudflare may log basic connection information (such as IP addresses) in accordance with their own privacy policies. Koali has no access to or control over these logs.</p>
+    <p>Once the page has finished loading, Koali makes no further network requests. All processing happens locally in your browser.</p>
+
     <h2>Third-party services</h2>
-    <p>Koali does not use any. If you choose to put your project folder in Dropbox, OneDrive, or a similar service for collaboration, that is between you and that service. Koali itself makes no network connections.</p>
+    <p>Beyond the hosting infrastructure described above, Koali does not use any third-party services. If you choose to put your project folder in Dropbox, OneDrive, or a similar service for collaboration, that is between you and that service. Once loaded, Koali itself makes no network connections.</p>
 
     <h2>Changes to this policy</h2>
     <p>If this ever changes, something has gone very wrong. But in the unlikely event it does, the updated policy will be posted here.</p>

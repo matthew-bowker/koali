@@ -268,6 +268,7 @@
     <a href="#visualisations">Visualisations</a>
     <a href="#irr">Inter-Rater Reliability</a>
     <a href="#collaboration">Collaboration</a>
+    <a href="#themes">Themes</a>
     <a href="#shortcuts">Keyboard Shortcuts</a>
     <a href="#data-privacy">Data &amp; Privacy</a>
     <a href="#troubleshooting">Troubleshooting</a>
@@ -288,7 +289,7 @@
 
     <div class="callout callout-tip">
       <strong>Privacy first</strong>
-      Koali runs entirely on your computer. Your documents, codes, and notes are never uploaded anywhere. There are no servers, no accounts, and no network requests. Everything stays in a local folder you control.
+      Koali runs entirely in your browser. Your documents, codes, and notes are never uploaded anywhere. There is no backend server, no account system, and no data ever leaves your machine. Everything stays in a local folder you control.
     </div>
 
     <h3>Browser requirements</h3>
@@ -351,8 +352,11 @@
     <p>Right-click on any source in the list to:</p>
     <ul>
       <li><strong>Rename</strong> &mdash; change the document title.</li>
+      <li><strong>Edit Metadata</strong> &mdash; edit the title, description, and add custom key-value attributes (e.g. "Participant Age", "Interview Location").</li>
+      <li><strong>Create Group / Add to Group</strong> &mdash; organise sources into named groups. Groups appear as collapsible sections in the source list.</li>
       <li><strong>Delete</strong> &mdash; remove the document and all associated coded segments. A confirmation prompt is shown.</li>
     </ul>
+    <p>A search bar at the top of the source list lets you filter documents by title.</p>
 
     <!-- The Workspace -->
     <h2 id="workspace">The Workspace</h2>
@@ -370,10 +374,10 @@
     <p>Shows your codebook as a hierarchical tree. Each code has a colour dot and a count of coded segments. When text is selected in the document, a selection context area appears showing the selected text and a quick code search field.</p>
 
     <h3>Toolbar</h3>
-    <p>The toolbar at the top shows the project name and navigation tabs: <strong>Workspace</strong>, <strong>Queries</strong>, <strong>Charts</strong>, and <strong>IRR</strong>. Your display name and sync status are shown on the right.</p>
+    <p>The toolbar at the top shows the project name and navigation tabs: <strong>Workspace</strong>, <strong>Queries</strong>, <strong>Charts</strong>, <strong>Themes</strong>, and <strong>IRR</strong>. Your display name and sync status are shown on the right.</p>
 
     <h3>Status bar</h3>
-    <p>The bar at the bottom shows counts for sources, codes, and coded segments, plus the current save status.</p>
+    <p>The bar at the bottom shows counts for sources, codes, coded segments, and themes, plus the current save status.</p>
 
     <h3>Resizing panels</h3>
     <p>Drag the dividers between panels to resize them. The divider highlights in green when you hover over it.</p>
@@ -384,7 +388,14 @@
     <h3>Creating codes</h3>
     <ol>
       <li>Click <strong>+ New Code</strong> in the right panel, or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>.</li>
-      <li>Enter a code name and optional description.</li>
+      <li>Enter a code name.</li>
+      <li>Optionally select a <strong>description template</strong> to pre-fill the description field with a structured prompt:
+        <ul>
+          <li><strong>Inductive</strong> &mdash; Definition, When to use, When not to use, Example.</li>
+          <li><strong>Deductive</strong> &mdash; Theoretical basis, Definition, Indicators, Example.</li>
+          <li><strong>In Vivo</strong> &mdash; Participant quote, Meaning in context, Related concepts.</li>
+        </ul>
+      </li>
       <li>The new code appears as a root-level item in the code tree.</li>
     </ol>
 
@@ -403,11 +414,11 @@
         <ul>
           <li>Click a code in the tree.</li>
           <li>Press a number key <kbd>1</kbd>&ndash;<kbd>9</kbd> to apply the corresponding root-level code.</li>
-          <li>Press <kbd>/</kbd> to focus the quick search, type to filter, then click a code.</li>
+          <li>Press <kbd>/</kbd> to focus the quick search, type to filter, use <kbd>&uarr;</kbd>/<kbd>&darr;</kbd> to navigate, and press <kbd>Enter</kbd> to apply. Codes are sorted by usage frequency.</li>
         </ul>
       </li>
     </ol>
-    <p>Applied codes appear as coloured highlights on the text. Hover over a highlight to see the code name.</p>
+    <p>Applied codes appear as coloured highlights on the text. Hover over a highlight to see the code name. Right-click a highlight to see a popover with the code name and a preview of the coded text, with an option to <strong>remove the code</strong> from that segment.</p>
 
     <h3>Editing and deleting codes</h3>
     <ul>
@@ -424,7 +435,11 @@
     </ol>
 
     <h3>Exporting the codebook</h3>
-    <p>Right-click any code and select <strong>Export Codebook (CSV)</strong> to download a CSV file containing all codes with their names, descriptions, colours, parent codes, and creation dates.</p>
+    <p>Right-click any code to access export options:</p>
+    <ul>
+      <li><strong>Export Codebook (CSV)</strong> &mdash; download a CSV file containing all codes with their names, descriptions, colours, parent codes, and creation dates.</li>
+      <li><strong>Export Codebook (PDF)</strong> &mdash; generate a printable PDF of your codebook.</li>
+    </ul>
 
     <!-- Notes -->
     <h2 id="notes">Notes</h2>
@@ -496,7 +511,22 @@
     <p>A matrix with codes as rows and documents as columns. Cell colour intensity indicates how many times a code was applied in each document. Useful for spotting coding patterns across your dataset.</p>
 
     <h3>Word frequency</h3>
-    <p>A word cloud generated from all coded text segments. Word size reflects frequency. Common stop words are automatically filtered out, and the top 50 words are displayed. Hover over a word to see its exact count.</p>
+    <p>A word cloud generated from coded text segments. Word size reflects frequency. Common stop words are automatically filtered out, and the top 50 words are displayed. Hover over a word to see its exact count.</p>
+    <p>Use the <strong>Scope</strong> dropdown to filter words to a specific code, and the <strong>Min freq</strong> control to set a minimum occurrence threshold.</p>
+
+    <h3>Theme visualisations</h3>
+    <p>When you have themes defined, three additional chart types appear:</p>
+    <ul>
+      <li><strong>Theme Frequency</strong> &mdash; bar chart of segment counts per theme.</li>
+      <li><strong>Theme &times; Document</strong> &mdash; heatmap showing theme density across documents.</li>
+      <li><strong>Theme Summary</strong> &mdash; overview cards for each theme showing segment count, document count, associated codes, and codes ranked by frequency.</li>
+    </ul>
+
+    <h3>Heatmap drilldown</h3>
+    <p>Click any cell in the Code &times; Document heatmap to see the coded text segments for that code-document pair displayed below the matrix.</p>
+
+    <h3>Exporting charts</h3>
+    <p>When a Chart.js chart is displayed (frequency or heatmap), an <strong>Export Chart PNG</strong> button appears below the chart to download the current visualisation as a PNG image.</p>
 
     <!-- IRR -->
     <h2 id="irr">Inter-Rater Reliability</h2>
@@ -540,8 +570,14 @@
     <ol>
       <li>Create a project and save it to a shared folder.</li>
       <li>Each team member opens the same folder in Koali using <strong>Open Existing Project</strong>.</li>
-      <li>Each person sets their own display name in settings so their work is identifiable.</li>
+      <li>Each person sets their own display name and colour in <strong>Settings</strong> (gear icon) so their work is identifiable.</li>
     </ol>
+
+    <h3>Team members and roles</h3>
+    <p>In Settings, you can add team members by User ID and assign them a role (<strong>Editor</strong> or <strong>Viewer</strong>). The Activity Log in Settings shows a timestamped record of recent project actions.</p>
+
+    <h3>Backups</h3>
+    <p>Click <strong>Backup Project (JSON)</strong> in Settings to download a full backup of your project data. You can also click <strong>Save All Now</strong> to force an immediate save of all unsaved changes.</p>
 
     <div class="callout callout-note">
       <strong>Note</strong>
@@ -556,6 +592,34 @@
       <li><strong>Note content</strong> &mdash; two people edited the same note. Choose which version to keep.</li>
     </ul>
     <p>Conflicts are shown one at a time. You can resolve them immediately or skip and return later.</p>
+
+    <!-- Themes -->
+    <h2 id="themes">Themes</h2>
+    <p>Themes let you group related codes into higher-order patterns, which is a key step in thematic analysis. Navigate to the <strong>Themes</strong> tab to manage themes.</p>
+
+    <h3>Creating a theme</h3>
+    <ol>
+      <li>Click <strong>+ New Theme</strong>.</li>
+      <li>Enter a name (e.g. "Systemic Barriers") and optional description.</li>
+      <li>Choose a colour from the palette.</li>
+      <li>Select which codes belong to this theme using the checkbox list.</li>
+      <li>Click <strong>Create Theme</strong>.</li>
+    </ol>
+
+    <h3>Managing themes</h3>
+    <ul>
+      <li><strong>Add codes</strong> &mdash; click the <strong>+ Add Code</strong> button on a theme card, or drag a code from the Workspace codebook tree and drop it onto a theme card.</li>
+      <li><strong>Remove codes</strong> &mdash; click the &times; button next to a code chip on the theme card.</li>
+      <li><strong>Edit or delete</strong> &mdash; right-click a theme card to edit its name, description, colour, and code associations, or to delete the theme. Deleting a theme does not delete the codes it contains.</li>
+    </ul>
+
+    <h3>Theme badges</h3>
+    <p>In the Workspace codebook tree, codes that belong to a theme display a small coloured badge with the theme name next to the code, so you can see theme associations at a glance.</p>
+
+    <div class="callout callout-tip">
+      <strong>Tip</strong>
+      Use the theme visualisations in the Charts tab (Theme Frequency, Theme &times; Document, and Theme Summary) to explore patterns across your themes.
+    </div>
 
     <!-- Keyboard Shortcuts -->
     <h2 id="shortcuts">Keyboard Shortcuts</h2>
@@ -581,7 +645,7 @@
 
     <div class="callout callout-tip">
       <strong>Your documents never leave your computer</strong>
-      Koali makes zero network requests. There are no servers, no cloud uploads, no analytics, and no telemetry of any kind. Every file you import, every code you create, and every note you write stays in a folder on your machine that only you control. Koali works fully offline once loaded.
+      Once loaded, Koali runs entirely in your browser and makes no further network requests. There is no backend server processing your data, no cloud uploads, no analytics, and no telemetry of any kind. Every file you import, every code you create, and every note you write stays in a folder on your machine that only you control. Koali works fully offline once the page has loaded.
     </div>
 
     <h3>Where data is stored</h3>
@@ -597,6 +661,7 @@
       <tr><td><code>coding/</code></td><td>Per-document coding data (one file per source).</td></tr>
       <tr><td><code>notes/</code></td><td>Individual note files and a note manifest.</td></tr>
       <tr><td><code>queries/</code></td><td>Saved query definitions.</td></tr>
+      <tr><td><code>themes.json</code></td><td>Theme definitions and code associations.</td></tr>
     </table>
     <p>Because everything is plain JSON, you can inspect, back up, or version-control your project with any standard tool.</p>
 
