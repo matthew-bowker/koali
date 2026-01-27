@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koali — Lightweight Qualitative Analysis</title>
+  <meta name="description" content="Free, private, browser-based qualitative data analysis. No install, no cloud, no fuss. Your research data stays with you.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐨</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafcfa;
+      --bg-secondary: #f0f4f0;
+      --bg-hover: #e6ebe6;
+      --bg-active: #d4e5d6;
+      --text: #1e2b1f;
+      --text-secondary: #5a6b5c;
+      --text-muted: #8a9a8c;
+      --border: #d4ddd5;
+      --primary: #3a5a40;
+      --primary-hover: #2d4a33;
+      --primary-light: #dce8dd;
+      --danger: #b5403a;
+      --success: #3a7a42;
+      --radius: 8px;
+      --radius-lg: 16px;
+      --shadow: 0 1px 3px rgba(30,43,31,0.08);
+      --shadow-lg: 0 6px 20px rgba(30,43,31,0.12);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 16px;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 56px;
+      background: rgba(250,252,250,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    nav .logo img { width: 32px; height: 32px; border-radius: 50%; }
+    nav ul { list-style: none; display: flex; gap: 28px; }
+    nav ul a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav ul a:hover { color: var(--primary); }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 20px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { background: var(--primary-hover); box-shadow: 0 2px 8px rgba(58,90,64,0.25); }
+
+    /* ── Hero ── */
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 140px 24px 80px;
+      background: linear-gradient(145deg, #e8efe5 0%, #d6e4e0 40%, #dce3da 100%);
+    }
+    .hero img {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+    .hero .tagline {
+      font-size: 20px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      font-weight: 400;
+    }
+    .hero .subtitle {
+      max-width: 520px;
+      margin-top: 20px;
+      font-size: 16px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .hero .cta-group {
+      display: flex;
+      gap: 14px;
+      margin-top: 36px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      border: 1.5px solid transparent;
+    }
+    .btn-hero-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-hero-primary:hover { background: var(--primary-hover); box-shadow: 0 4px 14px rgba(58,90,64,0.3); }
+    .btn-hero-secondary {
+      background: rgba(255,255,255,0.7);
+      color: var(--primary);
+      border-color: var(--border);
+    }
+    .btn-hero-secondary:hover { background: #fff; }
+
+    /* ── Sections ── */
+    section { padding: 80px 24px; }
+    .section-title {
+      text-align: center;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .section-subtitle {
+      text-align: center;
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto 48px;
+    }
+    .container { max-width: 1040px; margin: 0 auto; }
+
+    /* ── Benefits ── */
+    .benefits { background: var(--bg); }
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+    }
+    .benefit-card {
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .benefit-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .benefit-icon { margin-bottom: 16px; display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: var(--primary-light); }
+    .benefit-icon svg { width: 24px; height: 24px; stroke: var(--primary); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .benefit-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .benefit-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ── Features ── */
+    .features { background: var(--bg-secondary); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .feature-item {
+      display: flex;
+      gap: 14px;
+      padding: 20px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .feature-icon { flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: var(--primary-light); }
+    .feature-icon svg { width: 20px; height: 20px; stroke: var(--primary); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .feature-item h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .feature-item p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* ── How It Works ── */
+    .how-it-works { background: var(--bg); }
+    .steps {
+      display: flex;
+      gap: 32px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .step {
+      flex: 1;
+      min-width: 200px;
+      max-width: 280px;
+      text-align: center;
+    }
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .step h4 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+
+    /* ── Audience ── */
+    .audience { background: var(--bg-secondary); }
+    .audience-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .audience-card {
+      text-align: center;
+      padding: 28px 20px;
+      background: var(--bg);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    .audience-card .icon { margin-bottom: 12px; display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; background: var(--primary-light); }
+    .audience-card .icon svg { width: 24px; height: 24px; stroke: var(--primary); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .audience-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .audience-card p { font-size: 13px; color: var(--text-secondary); }
+
+    /* ── Privacy Banner ── */
+    .privacy-banner {
+      background: var(--primary);
+      color: #fff;
+      text-align: center;
+      padding: 64px 24px;
+    }
+    .privacy-banner .privacy-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      margin-bottom: 20px;
+    }
+    .privacy-banner .privacy-icon svg { width: 32px; height: 32px; stroke: #fff; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .privacy-banner h2 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+    .privacy-banner p { font-size: 16px; opacity: 0.85; max-width: 560px; margin: 0 auto 8px; line-height: 1.7; }
+    .privacy-banner .privacy-points {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .privacy-banner .privacy-point {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .privacy-banner .privacy-point svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    /* ── CTA Banner ── */
+    .cta-banner {
+      text-align: center;
+      padding: 64px 24px;
+      background: linear-gradient(145deg, #e8efe5, #d6e4e0);
+    }
+    .cta-banner h2 { font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+    .cta-banner p { font-size: 16px; color: var(--text-secondary); margin-bottom: 28px; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    footer p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      nav ul { display: none; }
+      .hero h1 { font-size: 36px; }
+      .hero .tagline { font-size: 17px; }
+      section { padding: 56px 20px; }
+      .section-title { font-size: 26px; }
+    }
+    @media (max-width: 480px) {
+      nav { padding: 0 16px; }
+      .hero { padding: 110px 16px 56px; }
+      .hero img { width: 120px; height: 120px; }
+      .hero h1 { font-size: 30px; }
+      .btn-hero { padding: 12px 24px; font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="#" class="logo">
+      <img src="img/koali_zoomed.png" alt="Koali">
+      Koali
+    </a>
+    <ul>
+      <li><a href="#benefits">Why Koali</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="#audience">Who It's For</a></li>
+      <li><a href="guide.html">Guide</a></li>
+    </ul>
+    <a href="/app/" class="nav-cta">Try Koali</a>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <img src="img/koali_home.png" alt="Koali logo">
+    <h1>Koali</h1>
+    <p class="tagline">Lightweight Qualitative Analysis</p>
+    <p class="subtitle">A free, private, browser-based tool for thematic coding and qualitative research. No install. No cloud. Your data never leaves your machine.</p>
+    <div class="cta-group">
+      <a href="/app/" class="btn-hero btn-hero-primary">Get Started</a>
+      <a href="#features" class="btn-hero btn-hero-secondary">See Features</a>
+    </div>
+  </section>
+
+  <!-- Benefits -->
+  <section class="benefits" id="benefits">
+    <div class="container">
+      <h2 class="section-title">Research tools shouldn't be complicated</h2>
+      <p class="section-subtitle">Koali gives you what you need for qualitative analysis without the bloat, cost, or privacy trade-offs.</p>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <span class="benefit-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <h3>Completely Private</h3>
+          <p>No servers, no cloud, no accounts. Your research data stays on your computer and is never transmitted anywhere.</p>
+        </div>
+        <div class="benefit-card">
+          <span class="benefit-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+          <h3>Zero Install</h3>
+          <p>Runs entirely in your browser. Open the page and start working — no downloads, no setup, no IT department.</p>
+        </div>
+        <div class="benefit-card">
+          <span class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/></svg></span>
+          <h3>Free &amp; Open</h3>
+          <p>No licence fees, no subscriptions, no paywalls. Qualitative analysis should be accessible to every researcher.</p>
+        </div>
+        <div class="benefit-card">
+          <span class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
+          <h3>Simple Collaboration</h3>
+          <p>Share project folders via Dropbox, OneDrive, or a network drive. All data is stored in human-readable JSON.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="container">
+      <h2 class="section-title">Everything you need, nothing you don't</h2>
+      <p class="section-subtitle">Purpose-built for thematic analysis with a clean, focused interface.</p>
+      <div class="features-grid">
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>
+          <div>
+            <h4>Hierarchical Coding</h4>
+            <p>Create unlimited nested codes with colours. Select text, apply codes, and build your codebook as you go.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+          <div>
+            <h4>Multi-Format Import</h4>
+            <p>PDF, DOCX, plain text, and transcripts (VTT, SRT, Zoom JSON). Bring your data in whatever format you have.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+          <div>
+            <h4>Rich Notes</h4>
+            <p>Attach notes to documents, segments, codes, or create standalone notes. Full rich-text formatting.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+          <div>
+            <h4>Boolean Queries</h4>
+            <p>Find coded segments using AND, OR, and NOT operators. Interrogate your data with precision.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+          <div>
+            <h4>Visualisations</h4>
+            <p>Code frequency charts, hierarchy trees, and heatmaps help you see patterns across your dataset.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <div>
+            <h4>Inter-Rater Reliability</h4>
+            <p>Calculate agreement between coders to strengthen the rigour of your analysis.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg></span>
+          <div>
+            <h4>Keyboard Shortcuts</h4>
+            <p>Press 1–9 to quick-apply codes, Ctrl+S to save, and more. Stay in flow without reaching for the mouse.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></span>
+          <div>
+            <h4>Autosave &amp; Undo</h4>
+            <p>Your work is saved automatically. Full undo/redo history means you can experiment freely.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <h2 class="section-title">Up and running in seconds</h2>
+      <p class="section-subtitle">No accounts, no onboarding wizards, no tutorials required.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h4>Open in Your Browser</h4>
+          <p>Navigate to Koali in Chrome, Edge, or Opera. Nothing to install — it just works.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h4>Create a Project</h4>
+          <p>Pick a folder on your computer. Koali stores everything there in plain, open JSON files.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h4>Start Coding</h4>
+          <p>Import your documents, build codes, and begin your qualitative analysis right away.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Audience -->
+  <section class="audience" id="audience">
+    <div class="container">
+      <h2 class="section-title">Built for researchers</h2>
+      <p class="section-subtitle">Whether you're running a PhD study or analysing user interviews, Koali fits your workflow.</p>
+      <div class="audience-grid">
+        <div class="audience-card">
+          <span class="icon"><svg viewBox="0 0 24 24"><path d="M22 10l-10-6L2 10l10 6 10-6z"/><path d="M6 12v5c0 2 3 4 6 4s6-2 6-4v-5"/></svg></span>
+          <h4>Academic Researchers</h4>
+          <p>Sociologists, public health researchers, and anyone conducting thematic analysis for publications.</p>
+        </div>
+        <div class="audience-card">
+          <span class="icon"><svg viewBox="0 0 24 24"><path d="M9 3h6v5.586a1 1 0 0 0 .293.707l5.414 5.414a2 2 0 0 1 0 2.828l-.586.586a2 2 0 0 1-2.828 0L12 12.828l-5.293 5.293a2 2 0 0 1-2.828 0l-.586-.586a2 2 0 0 1 0-2.828L8.707 9.293A1 1 0 0 0 9 8.586V3z"/><line x1="9" y1="3" x2="15" y2="3"/></svg></span>
+          <h4>UX Researchers</h4>
+          <p>Analyse interview transcripts and usability sessions without expensive enterprise tools.</p>
+        </div>
+        <div class="audience-card">
+          <span class="icon"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
+          <h4>Graduate Students</h4>
+          <p>Learn qualitative methods with a simple, free tool. No licence headaches during your degree.</p>
+        </div>
+        <div class="audience-card">
+          <span class="icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <h4>Small Research Teams</h4>
+          <p>Collaborate asynchronously through shared folders with built-in conflict detection and IRR.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy Banner -->
+  <section class="privacy-banner">
+    <div class="privacy-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+    <h2>Your documents never leave your computer</h2>
+    <p>Koali has no servers, no cloud storage, no analytics, and no telemetry. Every file, every code, every note lives in a folder you control. Nothing is ever uploaded or transmitted.</p>
+    <div class="privacy-points">
+      <span class="privacy-point"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No accounts required</span>
+      <span class="privacy-point"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No network requests</span>
+      <span class="privacy-point"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Works fully offline</span>
+      <span class="privacy-point"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Open JSON format</span>
+    </div>
+  </section>
+
+  <!-- CTA Banner -->
+  <section class="cta-banner" id="cta">
+    <h2>Ready to start your analysis?</h2>
+    <p>Koali is free, private, and ready when you are.</p>
+    <a href="/app/" class="btn-hero btn-hero-primary">Open Koali</a>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Made with care in Northumberland, UK by Matt Bowker</p>
+    <p>v0.1.0 &middot; <a href="https://getkoali.com">getkoali.com</a> &middot; <a href="terms.html">Terms &amp; Conditions</a> &middot; <a href="privacy.html">Privacy</a></p>
+  </footer>
+
+</body>
+</html>

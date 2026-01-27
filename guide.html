@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Guide — Koali</title>
+  <meta name="description" content="Comprehensive user guide for Koali, a free browser-based qualitative data analysis tool.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐨</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #fafcfa;
+      --bg-secondary: #f0f4f0;
+      --bg-hover: #e6ebe6;
+      --bg-active: #d4e5d6;
+      --text: #1e2b1f;
+      --text-secondary: #5a6b5c;
+      --text-muted: #8a9a8c;
+      --border: #d4ddd5;
+      --primary: #3a5a40;
+      --primary-hover: #2d4a33;
+      --primary-light: #dce8dd;
+      --radius: 8px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(30,43,31,0.08);
+      --shadow-lg: 0 6px 20px rgba(30,43,31,0.12);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+      --sidebar-width: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.7;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 56px;
+      background: rgba(250,252,250,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    nav .logo img { width: 32px; height: 32px; border-radius: 50%; }
+    nav ul { list-style: none; display: flex; gap: 28px; }
+    nav ul a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    nav ul a:hover { color: var(--primary); }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 20px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { background: var(--primary-hover); box-shadow: 0 2px 8px rgba(58,90,64,0.25); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed;
+      top: 56px;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      padding: 24px 0;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .sidebar h3 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      padding: 8px 20px 4px;
+    }
+    .sidebar a {
+      display: block;
+      padding: 6px 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .sidebar a:hover { color: var(--primary); background: var(--bg-hover); }
+    .sidebar a.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); font-weight: 500; }
+
+    /* ── Mobile sidebar toggle ── */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 200;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Main content ── */
+    .content {
+      margin-left: var(--sidebar-width);
+      padding: 80px 48px 64px;
+      max-width: 820px;
+    }
+
+    /* ── Typography ── */
+    .content h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    .content .lead {
+      font-size: 17px;
+      color: var(--text-secondary);
+      margin-bottom: 48px;
+      line-height: 1.7;
+    }
+    .content h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin-top: 56px;
+      margin-bottom: 16px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .content h2:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+    .content h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      margin-top: 28px;
+      margin-bottom: 10px;
+    }
+    .content p { margin-bottom: 14px; }
+    .content ul, .content ol { margin-bottom: 14px; padding-left: 24px; }
+    .content li { margin-bottom: 6px; }
+
+    /* ── Inline code & kbd ── */
+    kbd {
+      display: inline-block;
+      padding: 2px 7px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: 0 1px 0 var(--border);
+    }
+    code {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: var(--bg-secondary);
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); background: var(--bg-secondary); }
+
+    /* ── Callout boxes ── */
+    .callout {
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .callout-tip { background: var(--primary-light); border-left: 3px solid var(--primary); }
+    .callout-note { background: #eef3f8; border-left: 3px solid #4a7ab5; }
+    .callout-warn { background: #fdf5e6; border-left: 3px solid #c08a20; }
+    .callout strong { display: block; margin-bottom: 4px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .sidebar.open { display: block; z-index: 150; width: 260px; background: var(--bg); box-shadow: var(--shadow-lg); }
+      .sidebar-toggle { display: flex; }
+      .content { margin-left: 0; padding: 80px 24px 64px; }
+    }
+    @media (max-width: 480px) {
+      nav { padding: 0 16px; }
+      nav ul { display: none; }
+      .content h1 { font-size: 28px; }
+      .content h2 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="index.html" class="logo">
+      <img src="img/koali_zoomed.png" alt="Koali">
+      Koali
+    </a>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="guide.html" style="color:var(--primary)">Guide</a></li>
+    </ul>
+    <a href="/app/" class="nav-cta">Try Koali</a>
+  </nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <h3>Guide</h3>
+    <a href="#getting-started">Getting Started</a>
+    <a href="#importing">Importing Documents</a>
+    <a href="#workspace">The Workspace</a>
+    <a href="#coding">Coding</a>
+    <a href="#notes">Notes</a>
+    <a href="#queries">Queries</a>
+    <a href="#visualisations">Visualisations</a>
+    <a href="#irr">Inter-Rater Reliability</a>
+    <a href="#collaboration">Collaboration</a>
+    <a href="#shortcuts">Keyboard Shortcuts</a>
+    <a href="#data-privacy">Data &amp; Privacy</a>
+    <a href="#troubleshooting">Troubleshooting</a>
+  </aside>
+
+  <!-- Mobile sidebar toggle -->
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+
+  <!-- Content -->
+  <main class="content">
+    <h1>User Guide</h1>
+    <p class="lead">Everything you need to know to get started with Koali and make the most of your qualitative analysis.</p>
+
+    <!-- Getting Started -->
+    <h2 id="getting-started">Getting Started</h2>
+
+    <div class="callout callout-tip">
+      <strong>Privacy first</strong>
+      Koali runs entirely on your computer. Your documents, codes, and notes are never uploaded anywhere. There are no servers, no accounts, and no network requests. Everything stays in a local folder you control.
+    </div>
+
+    <h3>Browser requirements</h3>
+    <p>Koali runs entirely in your web browser. For the best experience, use a Chromium-based browser:</p>
+    <table>
+      <tr><th>Browser</th><th>Support</th><th>Notes</th></tr>
+      <tr><td>Chrome 86+</td><td>Full</td><td>Recommended</td></tr>
+      <tr><td>Edge 86+</td><td>Full</td><td>Chromium-based</td></tr>
+      <tr><td>Opera 72+</td><td>Full</td><td>Chromium-based</td></tr>
+      <tr><td>Firefox</td><td>Limited</td><td>No File System Access API; uses download/upload fallback</td></tr>
+      <tr><td>Safari</td><td>Limited</td><td>No File System Access API; uses download/upload fallback</td></tr>
+    </table>
+
+    <div class="callout callout-tip">
+      <strong>Tip</strong>
+      Chrome, Edge, and Opera support the File System Access API, which lets Koali read and write directly to a folder on your computer. Firefox and Safari work but require manual file downloads and uploads instead.
+    </div>
+
+    <h3>Creating a project</h3>
+    <ol>
+      <li>Open Koali in your browser.</li>
+      <li>On the home screen, enter your display name. This identifies your work in collaborative projects.</li>
+      <li>Click <strong>Create New Project</strong>.</li>
+      <li>Choose a folder on your computer. Koali will store all project data here as plain JSON files.</li>
+      <li>Give your project a name and optional description.</li>
+    </ol>
+
+    <h3>Opening an existing project</h3>
+    <ol>
+      <li>Click <strong>Open Existing Project</strong> on the home screen.</li>
+      <li>Select the folder containing a Koali project (the one with a <code>koali.json</code> file).</li>
+      <li>Koali loads your project, including all sources, codes, notes, and codings.</li>
+    </ol>
+    <p>Recent projects are listed on the home screen for quick access.</p>
+
+    <!-- Importing Documents -->
+    <h2 id="importing">Importing Documents</h2>
+
+    <h3>Supported formats</h3>
+    <table>
+      <tr><th>Format</th><th>Extension</th><th>Details</th></tr>
+      <tr><td>PDF</td><td>.pdf</td><td>Text extracted per page. Scanned/image-only PDFs are not supported.</td></tr>
+      <tr><td>Word</td><td>.docx</td><td>Converted to HTML with formatting preserved.</td></tr>
+      <tr><td>Plain text</td><td>.txt</td><td>Displayed as-is with whitespace preserved.</td></tr>
+      <tr><td>WebVTT</td><td>.vtt</td><td>Transcript with timestamps and speaker labels.</td></tr>
+      <tr><td>SRT</td><td>.srt</td><td>Subtitle format with timestamps and text.</td></tr>
+      <tr><td>Zoom JSON</td><td>.json</td><td>Zoom meeting transcript with speakers and timestamps.</td></tr>
+    </table>
+
+    <h3>How to import</h3>
+    <ol>
+      <li>Click the <strong>Import</strong> button in the left panel.</li>
+      <li>Select one or more files in the file picker. You can select multiple files at once.</li>
+      <li>Koali automatically detects the file type from the extension and parses accordingly.</li>
+      <li>Imported documents appear in the source list on the left panel.</li>
+    </ol>
+    <p>Original files are copied into your project's <code>sources/</code> folder. Parsed content is cached locally in IndexedDB for fast loading on subsequent opens.</p>
+
+    <h3>Managing sources</h3>
+    <p>Right-click on any source in the list to:</p>
+    <ul>
+      <li><strong>Rename</strong> &mdash; change the document title.</li>
+      <li><strong>Delete</strong> &mdash; remove the document and all associated coded segments. A confirmation prompt is shown.</li>
+    </ul>
+
+    <!-- The Workspace -->
+    <h2 id="workspace">The Workspace</h2>
+
+    <p>The workspace is divided into three resizable panels:</p>
+
+    <h3>Left panel &mdash; Sources &amp; Notes</h3>
+    <p>Lists all imported documents and project notes. Click a document to open it in the centre panel. Click a note to open the note editor.</p>
+
+    <h3>Centre panel &mdash; Document Viewer</h3>
+    <p>Displays the currently selected document. For transcripts, content is shown as individual cues with timestamps and speaker labels. For PDFs, pages are rendered with page numbers. Select text by clicking and dragging to begin coding.</p>
+    <p>A search bar lets you find text within the current document. Matches are highlighted and scrolled into view.</p>
+
+    <h3>Right panel &mdash; Codes</h3>
+    <p>Shows your codebook as a hierarchical tree. Each code has a colour dot and a count of coded segments. When text is selected in the document, a selection context area appears showing the selected text and a quick code search field.</p>
+
+    <h3>Toolbar</h3>
+    <p>The toolbar at the top shows the project name and navigation tabs: <strong>Workspace</strong>, <strong>Queries</strong>, <strong>Charts</strong>, and <strong>IRR</strong>. Your display name and sync status are shown on the right.</p>
+
+    <h3>Status bar</h3>
+    <p>The bar at the bottom shows counts for sources, codes, and coded segments, plus the current save status.</p>
+
+    <h3>Resizing panels</h3>
+    <p>Drag the dividers between panels to resize them. The divider highlights in green when you hover over it.</p>
+
+    <!-- Coding -->
+    <h2 id="coding">Coding</h2>
+
+    <h3>Creating codes</h3>
+    <ol>
+      <li>Click <strong>+ New Code</strong> in the right panel, or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd>.</li>
+      <li>Enter a code name and optional description.</li>
+      <li>The new code appears as a root-level item in the code tree.</li>
+    </ol>
+
+    <h3>Organising codes into hierarchies</h3>
+    <ul>
+      <li><strong>Add a child code</strong> &mdash; right-click a code and select "Add Child Code".</li>
+      <li><strong>Drag and drop</strong> &mdash; drag a code onto another to make it a child. Drag to the root area to move it back to the top level.</li>
+      <li>Click the triangle arrow next to a parent code to expand or collapse its children.</li>
+    </ul>
+
+    <h3>Applying codes to text</h3>
+    <ol>
+      <li>Select text in the document viewer by clicking and dragging.</li>
+      <li>The selection context panel appears in the right panel showing the selected text.</li>
+      <li>Apply a code by any of these methods:
+        <ul>
+          <li>Click a code in the tree.</li>
+          <li>Press a number key <kbd>1</kbd>&ndash;<kbd>9</kbd> to apply the corresponding root-level code.</li>
+          <li>Press <kbd>/</kbd> to focus the quick search, type to filter, then click a code.</li>
+        </ul>
+      </li>
+    </ol>
+    <p>Applied codes appear as coloured highlights on the text. Hover over a highlight to see the code name.</p>
+
+    <h3>Editing and deleting codes</h3>
+    <ul>
+      <li><strong>Double-click</strong> a code to edit its name and description.</li>
+      <li><strong>Right-click</strong> a code to access the context menu: edit, delete, add child, or merge.</li>
+      <li>Deleting a code removes all associated coded segments. A confirmation is required.</li>
+    </ul>
+
+    <h3>Merging codes</h3>
+    <ol>
+      <li>Right-click a code and select <strong>Merge Into...</strong></li>
+      <li>Select the target code.</li>
+      <li>All segments from the source code are reassigned to the target. The source code is removed.</li>
+    </ol>
+
+    <h3>Exporting the codebook</h3>
+    <p>Right-click any code and select <strong>Export Codebook (CSV)</strong> to download a CSV file containing all codes with their names, descriptions, colours, parent codes, and creation dates.</p>
+
+    <!-- Notes -->
+    <h2 id="notes">Notes</h2>
+
+    <h3>Note types</h3>
+    <table>
+      <tr><th>Type</th><th>Purpose</th></tr>
+      <tr><td>Analytic</td><td>Research findings, insights, and interpretations.</td></tr>
+      <tr><td>Reflexive</td><td>Reflections on methodology, bias, and your research process.</td></tr>
+      <tr><td>Procedural</td><td>Notes about coding procedures and guidelines for your team.</td></tr>
+      <tr><td>Theoretical</td><td>Theoretical connections, framework notes, and conceptual ideas.</td></tr>
+      <tr><td>Other</td><td>General notes that don't fit the categories above.</td></tr>
+    </table>
+
+    <h3>Creating a note</h3>
+    <ol>
+      <li>Click <strong>+ New Note</strong> in the left panel, or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>.</li>
+      <li>Enter a title, select a type, and optionally link the note to a code or document.</li>
+      <li>Add comma-separated tags for organisation.</li>
+      <li>Write your note content using the rich text editor (bold, italic, underline, lists).</li>
+    </ol>
+
+    <h3>Linking notes</h3>
+    <p>Notes can be linked to:</p>
+    <ul>
+      <li><strong>A code</strong> &mdash; to annotate a specific code with analytical notes.</li>
+      <li><strong>A document</strong> &mdash; to record observations about a specific source.</li>
+      <li><strong>Standalone</strong> &mdash; not linked to anything, for general project notes.</li>
+    </ul>
+
+    <!-- Queries -->
+    <h2 id="queries">Queries</h2>
+
+    <h3>Building a query</h3>
+    <ol>
+      <li>Navigate to the <strong>Queries</strong> tab.</li>
+      <li>Select one or more codes from the code list (hold <kbd>Ctrl</kbd> or <kbd>Cmd</kbd> to select multiple).</li>
+      <li>Choose an operator:
+        <ul>
+          <li><strong>OR</strong> &mdash; segments coded with any of the selected codes.</li>
+          <li><strong>AND</strong> &mdash; segments where all selected codes are applied within the same document.</li>
+          <li><strong>NOT</strong> &mdash; segments with the first code but not also tagged with other selected codes.</li>
+        </ul>
+      </li>
+      <li>Optionally filter to a specific document or leave as "All documents".</li>
+      <li>Click <strong>Run Query</strong>.</li>
+    </ol>
+
+    <h3>Query results</h3>
+    <p>Results are shown in a table with columns for document title, code (with colour), speaker (for transcripts), and the first 200 characters of coded text. The total result count is shown at the top.</p>
+
+    <h3>Saving and exporting</h3>
+    <ul>
+      <li><strong>Save Query</strong> &mdash; name and save query parameters for quick re-use. Saved queries appear as buttons below the search controls.</li>
+      <li><strong>Export CSV</strong> &mdash; download results as a CSV file with document, code, speaker, and text columns.</li>
+    </ul>
+
+    <!-- Visualisations -->
+    <h2 id="visualisations">Visualisations</h2>
+    <p>Navigate to the <strong>Charts</strong> tab to access visualisations.</p>
+
+    <h3>Code frequency</h3>
+    <p>A bar chart showing the number of coded segments per code, sorted from most to least frequent. Bar colours match code colours.</p>
+
+    <h3>Code hierarchy</h3>
+    <p>A tree view showing the parent-child relationships in your codebook. Useful for reviewing codebook structure at a glance.</p>
+
+    <h3>Code &times; Document heatmap</h3>
+    <p>A matrix with codes as rows and documents as columns. Cell colour intensity indicates how many times a code was applied in each document. Useful for spotting coding patterns across your dataset.</p>
+
+    <h3>Word frequency</h3>
+    <p>A word cloud generated from all coded text segments. Word size reflects frequency. Common stop words are automatically filtered out, and the top 50 words are displayed. Hover over a word to see its exact count.</p>
+
+    <!-- IRR -->
+    <h2 id="irr">Inter-Rater Reliability</h2>
+    <p>Navigate to the <strong>IRR</strong> tab to calculate agreement between coders. This requires at least two different users to have coded overlapping segments.</p>
+
+    <h3>Running an IRR calculation</h3>
+    <ol>
+      <li>Select <strong>Coder 1</strong> and <strong>Coder 2</strong> from the dropdown menus.</li>
+      <li>Optionally select a specific document, or analyse all documents.</li>
+      <li>Review the results.</li>
+    </ol>
+
+    <h3>Metrics</h3>
+    <table>
+      <tr><th>Metric</th><th>Description</th></tr>
+      <tr><td>Cohen's Kappa</td><td>Agreement adjusted for chance. Ranges from -1 to 1.</td></tr>
+      <tr><td>Percent Agreement</td><td>Simple percentage of segments where both coders agree.</td></tr>
+      <tr><td>Disagreement Count</td><td>Total number of coding disagreements.</td></tr>
+    </table>
+
+    <h3>Interpreting Cohen's Kappa</h3>
+    <table>
+      <tr><th>Kappa</th><th>Interpretation</th></tr>
+      <tr><td>&lt; 0</td><td>Poor agreement</td></tr>
+      <tr><td>0.00 &ndash; 0.20</td><td>Slight agreement</td></tr>
+      <tr><td>0.21 &ndash; 0.40</td><td>Fair agreement</td></tr>
+      <tr><td>0.41 &ndash; 0.60</td><td>Moderate agreement</td></tr>
+      <tr><td>0.61 &ndash; 0.80</td><td>Substantial agreement</td></tr>
+      <tr><td>0.81+</td><td>Almost perfect agreement</td></tr>
+    </table>
+
+    <p>A per-code breakdown table shows kappa and agreement for each individual code, helping you identify which codes need clearer definitions. The first 50 disagreements can be reviewed in detail and exported to CSV.</p>
+
+    <!-- Collaboration -->
+    <h2 id="collaboration">Collaboration</h2>
+
+    <h3>How it works</h3>
+    <p>Koali uses folder-based collaboration. Place your project folder in a shared location such as Dropbox, OneDrive, Google Drive, or a network drive. Each team member opens the same folder in Koali.</p>
+
+    <h3>Setting up collaboration</h3>
+    <ol>
+      <li>Create a project and save it to a shared folder.</li>
+      <li>Each team member opens the same folder in Koali using <strong>Open Existing Project</strong>.</li>
+      <li>Each person sets their own display name in settings so their work is identifiable.</li>
+    </ol>
+
+    <div class="callout callout-note">
+      <strong>Note</strong>
+      Koali works best with asynchronous collaboration. Avoid having multiple people edit the same project folder simultaneously. Take turns, and let your cloud service finish syncing before the next person opens the project.
+    </div>
+
+    <h3>Conflict detection and resolution</h3>
+    <p>When Koali detects that multiple users have made conflicting changes, a conflict resolution dialog appears. Conflict types include:</p>
+    <ul>
+      <li><strong>Code renamed</strong> &mdash; two people renamed the same code differently. Choose one version or enter a custom name.</li>
+      <li><strong>Code deleted</strong> &mdash; one person edited a code while another deleted it. Choose to keep or delete it.</li>
+      <li><strong>Note content</strong> &mdash; two people edited the same note. Choose which version to keep.</li>
+    </ul>
+    <p>Conflicts are shown one at a time. You can resolve them immediately or skip and return later.</p>
+
+    <!-- Keyboard Shortcuts -->
+    <h2 id="shortcuts">Keyboard Shortcuts</h2>
+    <table>
+      <tr><th>Shortcut</th><th>Action</th></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save all data</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td>Undo</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>Redo</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd></td><td>Create a new code</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd></td><td>Create a new note</td></tr>
+      <tr><td><kbd>1</kbd> &ndash; <kbd>9</kbd></td><td>Apply root-level code 1&ndash;9 to selected text</td></tr>
+      <tr><td><kbd>/</kbd></td><td>Focus quick code search (when text is selected)</td></tr>
+      <tr><td><kbd>Escape</kbd></td><td>Close dialog / cancel</td></tr>
+      <tr><td><kbd>Enter</kbd></td><td>Confirm dialog</td></tr>
+    </table>
+    <div class="callout callout-tip">
+      <strong>Tip</strong>
+      On macOS, use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd> for all shortcuts.
+    </div>
+
+    <!-- Data & Privacy -->
+    <h2 id="data-privacy">Data &amp; Privacy</h2>
+
+    <div class="callout callout-tip">
+      <strong>Your documents never leave your computer</strong>
+      Koali makes zero network requests. There are no servers, no cloud uploads, no analytics, and no telemetry of any kind. Every file you import, every code you create, and every note you write stays in a folder on your machine that only you control. Koali works fully offline once loaded.
+    </div>
+
+    <h3>Where data is stored</h3>
+    <p>All project data lives in the folder you chose when creating the project. Nothing is ever uploaded or transmitted. There are no accounts and no sign-in.</p>
+
+    <h3>Project file structure</h3>
+    <p>Your project folder contains human-readable JSON files:</p>
+    <table>
+      <tr><th>File / Folder</th><th>Contents</th></tr>
+      <tr><td><code>koali.json</code></td><td>Project manifest (name, description, metadata).</td></tr>
+      <tr><td><code>codebook.json</code></td><td>All code definitions and hierarchy.</td></tr>
+      <tr><td><code>sources/</code></td><td>Imported document files and a source manifest.</td></tr>
+      <tr><td><code>coding/</code></td><td>Per-document coding data (one file per source).</td></tr>
+      <tr><td><code>notes/</code></td><td>Individual note files and a note manifest.</td></tr>
+      <tr><td><code>queries/</code></td><td>Saved query definitions.</td></tr>
+    </table>
+    <p>Because everything is plain JSON, you can inspect, back up, or version-control your project with any standard tool.</p>
+
+    <h3>Browser caching</h3>
+    <p>Koali uses IndexedDB to cache parsed document content for faster loading. This data stays in your browser and can be cleared at any time through your browser's settings without affecting your project files.</p>
+
+    <h3>File System Access API</h3>
+    <p>In supported browsers (Chrome, Edge, Opera), Koali uses the File System Access API to read and write directly to your project folder. You grant permission once per session, and the browser may ask you to re-confirm on subsequent visits.</p>
+
+    <!-- Troubleshooting -->
+    <h2 id="troubleshooting">Troubleshooting</h2>
+
+    <h3>Firefox or Safari: no folder picker</h3>
+    <p>These browsers don't support the File System Access API. Koali falls back to a download/upload workflow. You can still use all features, but saving and loading requires manual file operations rather than direct folder access.</p>
+
+    <h3>Documents not loading</h3>
+    <ul>
+      <li>Check that the file format is supported (PDF, DOCX, TXT, VTT, SRT, or Zoom JSON).</li>
+      <li>For PDFs, ensure the file contains selectable text (not scanned images).</li>
+      <li>Try clearing your browser's IndexedDB cache and reloading the project.</li>
+    </ul>
+
+    <h3>Sync conflicts on shared folders</h3>
+    <ul>
+      <li>Ensure your cloud sync service has finished syncing before opening the project.</li>
+      <li>Avoid having two people work in the same project folder at the same time.</li>
+      <li>If conflicts appear, use the conflict resolution dialog to choose the correct version.</li>
+    </ul>
+
+    <h3>Permission prompts</h3>
+    <p>Chrome and Edge may ask you to re-grant folder access each time you open Koali. This is a browser security feature. Click "Allow" or "Edit files" when prompted.</p>
+
+    <h3>Clearing the cache</h3>
+    <p>If you experience stale data or loading issues, clear the IndexedDB storage for Koali in your browser's developer tools (Application &rarr; Storage &rarr; IndexedDB). Your project files on disk are not affected.</p>
+
+  </main>
+
+  <script>
+    // Sidebar toggle for mobile
+    document.getElementById('sidebarToggle').addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+
+    // Highlight active sidebar link on scroll
+    const sections = document.querySelectorAll('.content h2[id]');
+    const links = document.querySelectorAll('.sidebar a');
+    window.addEventListener('scroll', function() {
+      let current = '';
+      sections.forEach(function(s) {
+        if (window.scrollY >= s.offsetTop - 100) current = s.id;
+      });
+      links.forEach(function(a) {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    });
+  </script>
+
+  <footer style="text-align:center;padding:32px 24px;border-top:1px solid var(--border);margin-left:var(--sidebar-width);">
+    <p style="font-size:13px;color:var(--text-muted);line-height:1.8;">Made with care in Northumberland, UK by Matt Bowker</p>
+    <p style="font-size:13px;color:var(--text-muted);line-height:1.8;">v0.1.0 &middot; <a href="https://getkoali.com" style="color:var(--primary);text-decoration:none;">getkoali.com</a> &middot; <a href="terms.html" style="color:var(--primary);text-decoration:none;">Terms &amp; Conditions</a> &middot; <a href="privacy.html" style="color:var(--primary);text-decoration:none;">Privacy</a></p>
+  </footer>
+
+</body>
+</html>

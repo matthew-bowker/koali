@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koali</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="lib/quill.snow.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F428;</text></svg>">
+</head>
+<body>
+  <!-- HOME VIEW -->
+  <div id="home-view">
+    <div class="home-container">
+      <div class="home-logo">
+        <img src="../img/koali_home.png" alt="Koali" class="logo-icon" />
+        <h1>Koali</h1>
+        <p class="home-subtitle">Lightweight Qualitative Analysis</p>
+      </div>
+      <div class="home-actions">
+        <button id="btn-create-project" class="btn btn-primary btn-large">Create New Project</button>
+        <button id="btn-open-project" class="btn btn-secondary btn-large">Open Existing Project</button>
+      </div>
+      <div id="no-fs-warning" class="warning hidden">
+        Your browser does not support the File System Access API. Please use Chrome or Edge for the full experience.
+      </div>
+      <div id="recent-projects" class="recent-projects"></div>
+      <div id="user-setup" class="user-setup">
+        <label>Your Name
+          <input type="text" id="input-user-name" placeholder="Enter your name" />
+        </label>
+      </div>
+      <footer class="home-footer">
+        <p class="home-version">v0.1.0</p>
+        <p class="home-credit">Made with <span class="heart">&hearts;</span> in Northumberland, UK by Matt Bowker</p>
+        <a href="/" class="home-link">getkoali.com</a>
+      </footer>
+    </div>
+  </div>
+
+  <!-- WORKSPACE VIEW -->
+  <div id="workspace-view" class="hidden">
+    <header id="toolbar">
+      <div class="toolbar-left">
+        <span class="logo-small"><img src="../img/koali_zoomed.png" alt="Koali" class="logo-small-img" /> Koali</span>
+        <span id="project-name" class="project-name"></span>
+      </div>
+      <nav class="toolbar-nav">
+        <button class="tab-btn active" data-tab="workspace">Workspace</button>
+        <button class="tab-btn" data-tab="explorer">Explorer</button>
+        <button class="tab-btn" data-tab="themes">Themes</button>
+        <button class="tab-btn" data-tab="queries">Queries</button>
+        <button class="tab-btn" data-tab="visualizations">Charts</button>
+        <button class="tab-btn" data-tab="irr">IRR</button>
+      </nav>
+      <div class="toolbar-right">
+        <span id="sync-status" class="sync-status" title="Sync status">&#9679;</span>
+        <span id="user-display" class="user-display"></span>
+        <button id="btn-settings" class="btn btn-icon" title="Settings">&#9881;</button>
+      </div>
+    </header>
+
+    <!-- WORKSPACE TAB -->
+    <main id="tab-workspace" class="tab-content active">
+      <div id="panels">
+        <div id="panel-left" class="panel">
+          <div class="panel-header">
+            <span>Sources</span>
+            <button id="btn-import" class="btn btn-small" title="Import document">+ Import</button>
+          </div>
+          <div id="source-list" class="panel-body"></div>
+          <div class="panel-header">
+            <span>Notes</span>
+            <button id="btn-new-note" class="btn btn-small" title="New note">+ New</button>
+          </div>
+          <div id="note-list" class="panel-body"></div>
+        </div>
+        <div class="resizer" data-resize="left"></div>
+        <div id="panel-center" class="panel">
+          <div id="document-toolbar" class="doc-toolbar hidden">
+            <span id="doc-title"></span>
+            <div class="doc-toolbar-right">
+              <input type="search" id="doc-search" placeholder="Search..." class="search-input" />
+            </div>
+          </div>
+          <div id="document-viewer" class="doc-viewer">
+            <div class="empty-state">Select a document from the left panel to begin coding.</div>
+          </div>
+        </div>
+        <div class="resizer" data-resize="right"></div>
+        <div id="panel-right" class="panel">
+          <div class="panel-header">
+            <span>Codes</span>
+            <button id="btn-new-code" class="btn btn-small" title="New code">+ New Code</button>
+          </div>
+          <div id="code-search-bar" class="code-search-bar">
+            <input type="search" id="code-search" placeholder="Filter codes..." class="search-input" />
+          </div>
+          <div id="code-tree" class="panel-body code-tree"></div>
+          <div id="selection-context" class="selection-context hidden">
+            <div class="selection-header">Selected Text</div>
+            <div id="selection-text" class="selection-text"></div>
+            <div id="selection-actions" class="selection-actions">
+              <input type="search" id="quick-code-search" placeholder="Type to search codes..." class="search-input" />
+              <div id="quick-code-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- EXPLORER TAB -->
+    <div id="tab-explorer" class="tab-content">
+      <div class="explorer-container">
+        <div class="explorer-sidebar">
+          <div class="explorer-sidebar-header">
+            <input type="search" id="explorer-code-filter" class="search-input" placeholder="Filter codes..." />
+          </div>
+          <div class="explorer-code-list" id="explorer-code-list"></div>
+        </div>
+        <div class="explorer-main">
+          <div class="explorer-toolbar" id="explorer-toolbar"></div>
+          <div class="explorer-content" id="explorer-content">
+            <div class="empty-state">Select one or more codes from the left to explore segments.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- THEMES TAB -->
+    <div id="tab-themes" class="tab-content">
+      <div id="themes-panel"></div>
+    </div>
+
+    <!-- QUERIES TAB -->
+    <div id="tab-queries" class="tab-content">
+      <div id="query-builder"></div>
+    </div>
+
+    <!-- VISUALIZATIONS TAB -->
+    <div id="tab-visualizations" class="tab-content">
+      <div id="visualizations"></div>
+    </div>
+
+    <!-- IRR TAB -->
+    <div id="tab-irr" class="tab-content">
+      <div id="irr-dashboard"></div>
+    </div>
+
+    <footer id="status-bar">
+      <span id="status-sources">Sources: 0</span>
+      <span class="status-sep">|</span>
+      <span id="status-codes">Codes: 0</span>
+      <span class="status-sep">|</span>
+      <span id="status-segments">Segments: 0</span>
+      <span class="status-sep">|</span>
+      <span id="status-themes">Themes: 0</span>
+      <span class="status-sep">|</span>
+      <span id="status-save">Ready</span>
+    </footer>
+  </div>
+
+  <!-- MODAL OVERLAY -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal-content" class="modal-content"></div>
+  </div>
+
+  <!-- CONTEXT MENU -->
+  <div id="context-menu" class="context-menu hidden"></div>
+
+  <!-- Libraries (loaded from lib/) -->
+  <script src="lib/pdf.min.js"></script>
+  <script src="lib/mammoth.browser.min.js"></script>
+  <script src="lib/quill.min.js"></script>
+  <script src="lib/chart.min.js"></script>
+
+  <!-- Configure PDF.js worker -->
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
+    }
+  </script>
+
+  <!-- App (single bundled script, no ES modules — works from file://) -->
+  <script src="js/koali.js"></script>
+</body>
+</html>

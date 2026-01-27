@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Koali</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐨</text></svg>">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #fafcfa;
+      --text: #1e2b1f;
+      --text-secondary: #5a6b5c;
+      --text-muted: #8a9a8c;
+      --border: #d4ddd5;
+      --primary: #3a5a40;
+      --primary-hover: #2d4a33;
+      --primary-light: #dce8dd;
+      --radius: 8px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.7; }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; height: 56px;
+      background: rgba(250,252,250,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; color: var(--primary); text-decoration: none; }
+    nav .logo img { width: 32px; height: 32px; border-radius: 50%; }
+    nav ul { list-style: none; display: flex; gap: 28px; }
+    nav ul a { text-decoration: none; color: var(--text-secondary); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    nav ul a:hover { color: var(--primary); }
+    .nav-cta { display: inline-flex; align-items: center; padding: 8px 20px; background: var(--primary); color: #fff; border-radius: var(--radius); text-decoration: none; font-size: 14px; font-weight: 500; transition: background 0.2s, box-shadow 0.2s; }
+    .nav-cta:hover { background: var(--primary-hover); box-shadow: 0 2px 8px rgba(58,90,64,0.25); }
+
+    .page { max-width: 620px; margin: 0 auto; padding: 120px 24px 64px; }
+    .page h1 { font-size: 32px; font-weight: 700; color: var(--primary); margin-bottom: 32px; }
+    .page h2 { font-size: 20px; font-weight: 600; margin-top: 36px; margin-bottom: 12px; }
+    .page p { margin-bottom: 14px; }
+
+    .tldr {
+      background: var(--primary-light);
+      border-left: 3px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 36px;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .tldr strong { display: block; margin-bottom: 6px; font-size: 17px; }
+
+    .checklist { list-style: none; padding: 0; margin-bottom: 20px; }
+    .checklist li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 15px;
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist svg { width: 20px; height: 20px; stroke: var(--primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; margin-top: 2px; }
+
+    .sign-off {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    footer { text-align: center; padding: 32px 24px; border-top: 1px solid var(--border); }
+    footer p { font-size: 13px; color: var(--text-muted); line-height: 1.8; }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 480px) {
+      nav { padding: 0 16px; }
+      nav ul { display: none; }
+      .page { padding: 100px 20px 48px; }
+      .page h1 { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">
+      <img src="img/koali_zoomed.png" alt="Koali">
+      Koali
+    </a>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="guide.html">Guide</a></li>
+    </ul>
+    <a href="/app/" class="nav-cta">Try Koali</a>
+  </nav>
+
+  <main class="page">
+    <h1>Privacy Policy</h1>
+
+    <div class="tldr">
+      <strong>The short version</strong>
+      I don't want your data. I don't collect your data. I have no idea who you are, and I'd like to keep it that way.
+    </div>
+
+    <h2>What data does Koali collect?</h2>
+    <p>None. Zero. Absolutely nothing.</p>
+    <p>Koali runs entirely in your browser. There is no server. There are no analytics. There are no cookies, no tracking pixels, no fingerprinting, no "anonymous usage statistics", and no "we only collect what we need to improve your experience". There is nothing.</p>
+
+    <h2>What about my research data?</h2>
+    <p>Your documents, codes, notes, and everything else you create in Koali live in a folder on your computer. That's it. They never leave. They are not uploaded, synced, backed up, phoned home, or otherwise transmitted anywhere by Koali.</p>
+    <p>I couldn't look at your data even if I wanted to. I have no mechanism to do so. There is literally no code in Koali that sends anything to anyone.</p>
+
+    <h2>What Koali does not have</h2>
+    <ul class="checklist">
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No servers</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No databases</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No user accounts</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No cookies</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No analytics or tracking</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No third-party scripts</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No network requests of any kind</li>
+      <li><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> No way for me to know you exist</li>
+    </ul>
+
+    <h2>Third-party services</h2>
+    <p>Koali does not use any. If you choose to put your project folder in Dropbox, OneDrive, or a similar service for collaboration, that is between you and that service. Koali itself makes no network connections.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this ever changes, something has gone very wrong. But in the unlikely event it does, the updated policy will be posted here.</p>
+
+    <p class="sign-off">Honestly, this is the easiest privacy policy I've ever had to write. &mdash; Matt</p>
+  </main>
+
+  <footer>
+    <p>Made with care in Northumberland, UK by Matt Bowker</p>
+    <p>v0.1.0 &middot; <a href="https://getkoali.com">getkoali.com</a> &middot; <a href="terms.html">Terms &amp; Conditions</a> &middot; <a href="privacy.html">Privacy</a></p>
+  </footer>
+
+</body>
+</html>
