@@ -273,12 +273,50 @@ export function initDocumentViewer(state, storage) {
           showSegmentPopover(e, segment, code);
         });
 
-        range.surroundContents(mark);
+        highlightRange(range, mark);
       } catch (e) {
-        // surroundContents can fail if range spans multiple elements
-        // Fall back to simple approach: don't highlight this segment
         console.warn('Could not highlight segment:', segment.id, e.message);
       }
+    }
+  }
+
+  function highlightRange(range, mark) {
+    // If surroundContents works (single text node), use it directly
+    try {
+      range.surroundContents(mark);
+      return;
+    } catch (_) {
+      // Range spans multiple nodes — wrap each text node individually
+    }
+
+    const doc = range.startContainer.ownerDocument;
+    const walker = doc.createTreeWalker(range.commonAncestorContainer, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (range.intersectsNode(node)) {
+        textNodes.push(node);
+      }
+    }
+
+    for (const node of textNodes) {
+      const clone = mark.cloneNode(false);
+      let target = node;
+
+      // Trim to range boundaries for start/end nodes
+      if (node === range.startContainer && range.startOffset > 0) {
+        target = node.splitText(range.startOffset);
+      }
+      if (target === range.endContainer && range.endOffset < target.textContent.length) {
+        target.splitText(range.endOffset);
+      } else if (node === range.endContainer && range.endOffset < node.textContent.length) {
+        node.splitText(range.endOffset);
+        target = node;
+      }
+
+      target.parentNode.insertBefore(clone, target);
+      clone.appendChild(target);
     }
   }
 
