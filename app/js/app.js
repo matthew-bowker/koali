@@ -9,6 +9,7 @@ import { initQueryBuilder } from './components/query-builder.js';
 import { initVisualizations } from './components/visualizations.js';
 import { initIRRDashboard } from './components/irr-dashboard.js';
 import { initSettings } from './components/settings.js';
+import { initExplorer } from './components/explorer.js';
 import { initConflictResolver } from './components/conflict-resolver.js';
 import { initThemePanel } from './components/theme-panel.js';
 
@@ -114,6 +115,7 @@ function initWorkspace() {
   initIRRDashboard(state);
   initThemePanel(state, storage);
   initSettings(state, storage);
+  initExplorer(state);
   initResizers();
   initKeyboardShortcuts();
   storage.startAutosave();
