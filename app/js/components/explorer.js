@@ -28,6 +28,7 @@ export function initExplorer(state) {
       btn.addEventListener('click', () => {
         mode = btn.dataset.mode;
         renderToolbar();
+        renderCodeList();
         renderContent();
       });
     });
