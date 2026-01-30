@@ -9,3 +9,7 @@ Thumbs.db
 
 # Claude Code
 .claude/
+
+# Transcript data (VTT files)
+*.vtt
+app/data/

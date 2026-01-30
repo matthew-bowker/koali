@@ -902,9 +902,13 @@ async function parseVTT(file) {
 
 function extractSpeaker(text) {
   // Teams format: <v Speaker Name>text</v>
-  const vMatch = text.match(/^<v\s+([^>]+)>(.+?)(?:<\/v>)?$/s);
-  if (vMatch) {
-    return { speaker: vMatch[1].trim(), text: stripHtml(vMatch[2]).trim() };
+  if (text.trimStart().startsWith('<v ')) {
+    const closeAngle = text.indexOf('>');
+    if (closeAngle > 3) {
+      const speaker = text.substring(text.indexOf('<v ') + 3, closeAngle).trim();
+      const rest = text.substring(closeAngle + 1);
+      return { speaker, text: stripHtml(rest).trim() };
+    }
   }
   // Standard format: "Speaker Name: text"
   const cleaned = stripHtml(text);
@@ -975,13 +979,7 @@ async function parseSRT(file) {
   };
 }
 
-function extractSpeaker(text) {
-  const match = text.match(/^([^:]{1,50}):\s*(.+)$/s);
-  if (match) {
-    return { speaker: match[1].trim(), text: match[2].trim() };
-  }
-  return { speaker: null, text: text.trim() };
-}
+// extractSpeaker shared with vtt.js above (removed duplicate)
 
 // ── js/parsers/zoom-json.js ──
 

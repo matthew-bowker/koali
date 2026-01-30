@@ -75,9 +75,13 @@ export async function parseVTT(file) {
 
 function extractSpeaker(text) {
   // Teams format: <v Speaker Name>text</v>
-  const vMatch = text.match(/^<v\s+([^>]+)>(.+?)(?:<\/v>)?$/s);
-  if (vMatch) {
-    return { speaker: vMatch[1].trim(), text: stripHtml(vMatch[2]).trim() };
+  if (text.trimStart().startsWith('<v ')) {
+    const closeAngle = text.indexOf('>');
+    if (closeAngle > 3) {
+      const speaker = text.substring(text.indexOf('<v ') + 3, closeAngle).trim();
+      const rest = text.substring(closeAngle + 1);
+      return { speaker, text: stripHtml(rest).trim() };
+    }
   }
   // Standard format: "Speaker Name: text"
   const cleaned = stripHtml(text);
