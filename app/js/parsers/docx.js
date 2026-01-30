@@ -28,9 +28,13 @@ export async function parseDOCX(file) {
  * followed by a speaker name line and text.
  */
 function isTeamsTranscript(text) {
-  const lines = text.split('\n').slice(0, 20);
+  const lines = text.split('\n').slice(0, 30);
   const tsPattern = /^\d+:\d+:\d+\.\d+\s*-->\s*\d+:\d+:\d+\.\d+/;
-  return lines.some(l => tsPattern.test(l.trim()));
+  // If content contains a WEBVTT header, it's pasted VTT content, not a Teams transcript
+  if (lines.some(l => l.trim() === 'WEBVTT')) return false;
+  // Require at least 2 timestamp lines to confirm it's actually a transcript
+  const matches = lines.filter(l => tsPattern.test(l.trim()));
+  return matches.length >= 2;
 }
 
 /**

@@ -3,11 +3,15 @@ import { createTheme, updateTheme, deleteTheme, addCodesToTheme, removeCodesFrom
 export function initThemePanel(state, storage) {
   const container = document.getElementById('themes-panel');
   if (!container) return;
+  const expandedThemes = new Set();
 
   function render() {
     const themes = (state.get('themes.themes') || []).filter(t => !t.deleted);
     const codes = (state.get('codebook.codes') || []).filter(c => !c.deleted);
     const codings = state.get('codings') || {};
+    const sources = state.get('sources.manifest') || [];
+    const sourceMap = {};
+    for (const s of sources) sourceMap[s.id] = s;
 
     container.innerHTML = `
       <div class="themes-toolbar">
@@ -18,12 +22,52 @@ export function initThemePanel(state, storage) {
         ${themes.map(theme => {
           const segments = getThemeSegments(theme, codings);
           const themeCodes = codes.filter(c => theme.codeIds.includes(c.id));
+          const isExpanded = expandedThemes.has(theme.id);
+          const codeMap = {};
+          for (const c of themeCodes) codeMap[c.id] = c;
+
+          // Group segments by code for expanded view
+          let segmentsHTML = '';
+          if (isExpanded && segments.length > 0) {
+            const groupedByCode = {};
+            for (const seg of segments) {
+              if (!groupedByCode[seg.codeId]) groupedByCode[seg.codeId] = [];
+              groupedByCode[seg.codeId].push(seg);
+            }
+            segmentsHTML = Object.entries(groupedByCode).map(([codeId, segs]) => {
+              const code = codeMap[codeId];
+              if (!code) return '';
+              return `
+                <div class="theme-segment-group" style="border-left-color:${code.color}">
+                  <div class="theme-segment-group-header">
+                    <span class="code-color" style="background:${code.color}"></span>
+                    ${escapeHtml(code.name)} <span class="theme-segment-count">(${segs.length})</span>
+                  </div>
+                  ${segs.map(seg => {
+                    const src = sourceMap[seg.sourceId];
+                    const text = (seg.text || '').slice(0, 150) + ((seg.text || '').length > 150 ? '...' : '');
+                    return `
+                      <div class="theme-segment-item" data-source-id="${seg.sourceId}" data-code-id="${seg.codeId}">
+                        <div class="theme-segment-text">&ldquo;${escapeHtml(text)}&rdquo;</div>
+                        <div class="theme-segment-meta">
+                          ${seg.speaker ? `<span class="theme-segment-speaker">${escapeHtml(seg.speaker)}</span> &middot; ` : ''}
+                          <span class="theme-segment-source">${escapeHtml(src?.title || 'Unknown source')}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              `;
+            }).join('');
+          }
+
           return `
-            <div class="theme-card" data-theme-id="${theme.id}">
+            <div class="theme-card${isExpanded ? ' expanded' : ''}" data-theme-id="${theme.id}">
               <div class="theme-card-header">
                 <span class="theme-color-swatch" style="background:${theme.color}"></span>
                 <span class="theme-name">${escapeHtml(theme.name)}</span>
                 <span class="theme-stats">${themeCodes.length} codes &middot; ${segments.length} segments</span>
+                ${segments.length > 0 ? `<button class="theme-expand-btn" data-theme-id="${theme.id}" title="${isExpanded ? 'Collapse' : 'Explore segments'}">${isExpanded ? '&#9650;' : '&#9660;'}</button>` : ''}
               </div>
               ${theme.description ? `<div class="theme-description">${escapeHtml(theme.description)}</div>` : ''}
               <div class="theme-codes-list">
@@ -36,6 +80,7 @@ export function initThemePanel(state, storage) {
                 `).join('')}
                 <button class="theme-add-code-btn btn btn-small" data-theme-id="${theme.id}">+ Add Code</button>
               </div>
+              ${isExpanded ? `<div class="theme-segments">${segmentsHTML}</div>` : ''}
             </div>
           `;
         }).join('')}
@@ -94,6 +139,32 @@ export function initThemePanel(state, storage) {
           );
           state.set('themes.themes', themes);
         }
+      });
+    });
+
+    // Expand/collapse buttons
+    container.querySelectorAll('.theme-expand-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.themeId;
+        if (expandedThemes.has(id)) {
+          expandedThemes.delete(id);
+        } else {
+          expandedThemes.add(id);
+        }
+        render();
+      });
+    });
+
+    // Segment click → navigate to source and code
+    container.querySelectorAll('.theme-segment-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const sourceId = item.dataset.sourceId;
+        const codeId = item.dataset.codeId;
+        // Switch to coding tab and open source
+        document.querySelector('[data-tab="coding"]')?.click();
+        state.set('sources.activeSourceId', sourceId, { trackDirty: false });
+        state.set('ui.activeCodeId', codeId, { trackDirty: false });
       });
     });
   }

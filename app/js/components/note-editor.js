@@ -2,10 +2,10 @@ import { createNote, NOTE_TYPES } from '../models/note.js';
 
 export function initNoteEditor(state, storage) {
   // Listen for note events
-  window.addEventListener('koali-new-note', () => openNoteModal());
+  window.addEventListener('koali-new-note', (e) => openNoteModal(null, e.detail || null));
   window.addEventListener('koali-edit-note', (e) => openNoteModal(e.detail.noteId));
 
-  function openNoteModal(noteId = null) {
+  function openNoteModal(noteId = null, segmentContext = null) {
     const modal = document.getElementById('modal-content');
     const existing = noteId ? state.get(`notes.items.${noteId}`) : null;
 
@@ -37,6 +37,7 @@ export function initNoteEditor(state, storage) {
               <option value="">Standalone</option>
               <option value="code" ${existing?.linkedTo?.type === 'code' ? 'selected' : ''}>Code</option>
               <option value="source" ${existing?.linkedTo?.type === 'source' ? 'selected' : ''}>Document</option>
+              <option value="segment" ${existing?.linkedTo?.type === 'segment' || segmentContext?.segmentId ? 'selected' : ''}>Text Segment</option>
             </select>
           </div>
           <div class="form-group" style="flex:1" id="note-link-target-group">
@@ -46,6 +47,7 @@ export function initNoteEditor(state, storage) {
             </select>
           </div>
         </div>
+        ${segmentContext?.segmentText ? `<div class="form-group"><label>Linked Text</label><div class="segment-excerpt">${escapeHtml(segmentContext.segmentText.slice(0, 200))}${segmentContext.segmentText.length > 200 ? '...' : ''}</div></div>` : ''}
         <div class="form-group">
           <label>Tags (comma-separated)</label>
           <input type="text" id="note-tags" value="${escapeAttr(existing?.tags?.join(', ') || '')}" placeholder="tag1, tag2..." />
@@ -104,6 +106,17 @@ export function initNoteEditor(state, storage) {
       } else if (type === 'source') {
         linkTargetEl.innerHTML = '<option value="">Select document...</option>' +
           sources.map(s => `<option value="${s.id}" ${existing?.linkedTo?.id === s.id ? 'selected' : ''}>${escapeHtml(s.title)}</option>`).join('');
+      } else if (type === 'segment') {
+        // Show segments from the active source
+        const activeSourceId = segmentContext?.sourceId || existing?.linkedTo?.sourceId || state.get('sources.activeSourceId');
+        const codings = activeSourceId ? state.get(`codings.${activeSourceId}`) : null;
+        const segments = codings?.segments || [];
+        const preselectedId = segmentContext?.segmentId || existing?.linkedTo?.id;
+        linkTargetEl.innerHTML = '<option value="">Select segment...</option>' +
+          segments.map(s => {
+            const label = (s.text || '').slice(0, 60) + ((s.text || '').length > 60 ? '...' : '');
+            return `<option value="${s.id}" data-source-id="${activeSourceId}" ${s.id === preselectedId ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+          }).join('');
       } else {
         linkTargetEl.innerHTML = '<option value="">None</option>';
       }
@@ -128,9 +141,18 @@ export function initNoteEditor(state, storage) {
       const linkTarget = linkTargetEl.value;
       const content = quill ? quill.root.innerHTML : document.getElementById('note-textarea')?.value || '';
 
-      const linkedTo = linkType && linkTarget ? { type: linkType, id: linkTarget } : null;
+      let linkedTo = null;
+      if (linkType && linkTarget) {
+        linkedTo = { type: linkType, id: linkTarget };
+        if (linkType === 'segment') {
+          // Also store sourceId for segment links
+          const selectedOption = linkTargetEl.selectedOptions[0];
+          linkedTo.sourceId = selectedOption?.dataset?.sourceId || segmentContext?.sourceId || state.get('sources.activeSourceId');
+        }
+      }
       const linkedNotes = Array.from(document.getElementById('note-linked-notes').selectedOptions).map(o => o.value);
 
+      let savedNoteId;
       if (existing) {
         // Update existing note
         const updated = {
@@ -141,6 +163,7 @@ export function initNoteEditor(state, storage) {
         };
         const items = { ...state.get('notes.items'), [noteId]: updated };
         state.set('notes.items', items);
+        savedNoteId = noteId;
       } else {
         // Create new note
         const note = createNote(title, type, linkedTo, state.get('user.id'));
@@ -151,6 +174,20 @@ export function initNoteEditor(state, storage) {
         const items = { ...state.get('notes.items'), [note.id]: note };
         state.set('notes.manifest', manifest);
         state.set('notes.items', items);
+        savedNoteId = note.id;
+      }
+
+      // Link note back to segment
+      if (linkedTo?.type === 'segment' && linkedTo.id && linkedTo.sourceId) {
+        const coding = state.get(`codings.${linkedTo.sourceId}`);
+        if (coding) {
+          const seg = coding.segments.find(s => s.id === linkedTo.id);
+          if (seg) {
+            seg.noteId = savedNoteId;
+            coding.modified = new Date().toISOString();
+            state.set(`codings.${linkedTo.sourceId}`, { ...coding });
+          }
+        }
       }
 
       close();

@@ -178,6 +178,15 @@ export function initCodePanel(state, storage) {
     applyCode(e.detail.codeId);
   });
 
+  // ── Selection Add Note ──
+  document.getElementById('selection-add-note').addEventListener('click', () => {
+    const sel = state.get('ui.selectedText');
+    if (!sel) return;
+    window.dispatchEvent(new CustomEvent('koali-new-note', {
+      detail: { sourceId: sel.sourceId, segmentText: sel.text }
+    }));
+  });
+
   // ── Selection Context ──
   state.subscribe('ui.selectedText', (sel) => {
     if (sel) {

@@ -397,6 +397,33 @@ mark.code-highlight {
   margin-bottom: 8px;
   line-height: 1.3;
 }
+.segment-popover-actions {
+  display: flex;
+  gap: 6px;
+}
+.segment-note-btn { flex: 1; }
+
+/* Note badge on highlights */
+.highlight-note-tag {
+  position: absolute;
+  top: -10px;
+  right: -4px;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* Segment text excerpt in note editor */
+.segment-excerpt {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  padding: 6px 8px;
+  line-height: 1.4;
+  font-style: italic;
+}
 
 /* ── Code Panel ── */
 .code-search-bar {
@@ -685,6 +712,57 @@ th { font-weight: 600; color: var(--text-secondary); font-size: 12px; text-trans
 }
 .theme-code-remove:hover { color: var(--danger); }
 .theme-add-code-btn { font-size: 11px !important; }
+
+/* Theme expand / segment exploration */
+.theme-expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 2px 6px;
+  margin-left: auto;
+  border-radius: 4px;
+}
+.theme-expand-btn:hover { background: var(--bg-secondary); color: var(--text); }
+.theme-segments {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+}
+.theme-segment-group {
+  border-left: 3px solid var(--border);
+  padding-left: 10px;
+  margin-bottom: 12px;
+}
+.theme-segment-group-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.theme-segment-count { font-weight: 400; color: var(--text-muted); }
+.theme-segment-item {
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.theme-segment-item:hover { background: var(--bg-secondary); }
+.theme-segment-text {
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--text);
+}
+.theme-segment-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.theme-segment-speaker { font-weight: 600; }
 
 /* Theme code selector in modal */
 .theme-code-selector {

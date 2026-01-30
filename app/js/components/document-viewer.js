@@ -274,6 +274,20 @@ export function initDocumentViewer(state, storage) {
         });
 
         highlightRange(range, mark);
+
+        // Show note indicator if segment has a note attached
+        if (segment.noteId) {
+          const noteTag = document.createElement('span');
+          noteTag.className = 'highlight-tag highlight-note-tag';
+          noteTag.textContent = '\u{1F4DD}';
+          noteTag.title = 'View note';
+          noteTag.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            window.dispatchEvent(new CustomEvent('koali-edit-note', { detail: { noteId: segment.noteId } }));
+          });
+          mark.style.position = 'relative';
+          mark.appendChild(noteTag);
+        }
       } catch (e) {
         console.warn('Could not highlight segment:', segment.id, e.message);
       }
@@ -359,16 +373,31 @@ export function initDocumentViewer(state, storage) {
     popover.className = 'segment-popover';
     popover.style.left = e.clientX + 'px';
     popover.style.top = e.clientY + 'px';
+    const hasNote = !!segment.noteId;
     popover.innerHTML = `
       <div class="segment-popover-header">
         <span class="code-color" style="background:${code.color}"></span>
         <strong>${code.name}</strong>
       </div>
       <div class="segment-popover-text">${(segment.text || '').slice(0, 80)}${(segment.text || '').length > 80 ? '...' : ''}</div>
-      <button class="btn btn-small btn-danger segment-uncode-btn">Remove Code</button>
+      <div class="segment-popover-actions">
+        <button class="btn btn-small segment-note-btn">${hasNote ? 'View Note' : 'Add Note'}</button>
+        <button class="btn btn-small btn-danger segment-uncode-btn">Remove Code</button>
+      </div>
     `;
 
     document.body.appendChild(popover);
+
+    popover.querySelector('.segment-note-btn').addEventListener('click', () => {
+      popover.remove();
+      if (segment.noteId) {
+        window.dispatchEvent(new CustomEvent('koali-edit-note', { detail: { noteId: segment.noteId } }));
+      } else {
+        window.dispatchEvent(new CustomEvent('koali-new-note', {
+          detail: { segmentId: segment.id, sourceId: currentSourceId, segmentText: segment.text }
+        }));
+      }
+    });
 
     popover.querySelector('.segment-uncode-btn').addEventListener('click', () => {
       state.pushUndo();
