@@ -158,6 +158,37 @@ export function initDocumentViewer(state, storage) {
   // ── Text Selection ──
   function setupSelectionHandler() {
     viewer.addEventListener('mouseup', handleSelection);
+
+    // Delegated click handler for code highlights (works on cloned marks too)
+    contentRoot.addEventListener('click', (e) => {
+      const mark = e.target.closest('.code-highlight');
+      if (!mark) return;
+      e.stopPropagation();
+      const codeId = mark.dataset.codeId;
+      if (codeId) {
+        state.set('ui.activeCodeId', codeId, { trackDirty: false });
+      }
+    });
+
+    // Delegated contextmenu handler for code highlights
+    contentRoot.addEventListener('contextmenu', (e) => {
+      const mark = e.target.closest('.code-highlight');
+      if (!mark) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const segmentId = mark.dataset.segmentId;
+      const codeId = mark.dataset.codeId;
+      if (!segmentId || !codeId) return;
+
+      const codings = state.get(`codings.${currentSourceId}`);
+      const segment = codings?.segments?.find(s => s.id === segmentId);
+      const codes = state.get('codebook.codes') || [];
+      const code = codes.find(c => c.id === codeId);
+      if (segment && code) {
+        showSegmentPopover(e, segment, code);
+      }
+    });
   }
 
   function handleSelection() {
@@ -178,10 +209,19 @@ export function initDocumentViewer(state, storage) {
     const startOffset = computeOffset(contentRoot, range.startContainer, range.startOffset);
     const endOffset = computeOffset(contentRoot, range.endContainer, range.endOffset);
 
+    // Reject if offset computation failed (node not found in document tree)
+    if (startOffset < 0 || endOffset < 0 || endOffset <= startOffset) return;
+
+    // Resolve container nodes to nearest element for closest() lookups
+    const startEl = range.startContainer.nodeType === Node.ELEMENT_NODE
+      ? range.startContainer : range.startContainer.parentElement;
+    const endEl = range.endContainer.nodeType === Node.ELEMENT_NODE
+      ? range.endContainer : range.endContainer.parentElement;
+
     // For transcripts, also capture cue info
     let cueInfo = null;
-    const startCue = range.startContainer.parentElement?.closest('.transcript-cue');
-    const endCue = range.endContainer.parentElement?.closest('.transcript-cue');
+    const startCue = startEl?.closest('.transcript-cue');
+    const endCue = endEl?.closest('.transcript-cue');
     if (startCue) {
       cueInfo = {
         startCueIndex: parseInt(startCue.dataset.cueIndex),
@@ -191,7 +231,7 @@ export function initDocumentViewer(state, storage) {
 
     // For pages, capture page info
     let pageInfo = null;
-    const startPage = range.startContainer.parentElement?.closest('.doc-page');
+    const startPage = startEl?.closest('.doc-page');
     if (startPage) {
       pageInfo = { page: parseInt(startPage.dataset.page) };
     }
@@ -213,6 +253,31 @@ export function initDocumentViewer(state, storage) {
   }
 
   function computeOffset(root, node, offset) {
+    // If node is an element (not a text node), resolve to equivalent text position.
+    // The Selection API can provide element nodes where offset is a child index.
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (offset < node.childNodes.length) {
+        node = node.childNodes[offset];
+        offset = 0;
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const inner = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+          if (inner.nextNode()) {
+            node = inner.currentNode;
+            offset = 0;
+          }
+        }
+      } else {
+        // Past all children — resolve to end of last text node within element
+        const inner = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        let last = null;
+        while (inner.nextNode()) last = inner.currentNode;
+        if (last) {
+          node = last;
+          offset = last.textContent.length;
+        }
+      }
+    }
+
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     let charCount = 0;
     while (walker.nextNode()) {
@@ -221,7 +286,7 @@ export function initDocumentViewer(state, storage) {
       }
       charCount += walker.currentNode.textContent.length;
     }
-    return charCount;
+    return -1;
   }
 
   // ── Highlight Rendering ──
@@ -233,6 +298,9 @@ export function initDocumentViewer(state, storage) {
       parent.removeChild(el);
     });
     contentRoot.querySelectorAll('.highlight-tag').forEach(el => el.remove());
+
+    // Merge adjacent text nodes to prevent fragmentation from splitText calls
+    contentRoot.normalize();
 
     const codings = state.get(`codings.${currentSourceId}`);
     if (!codings || !codings.segments || codings.segments.length === 0) return;
@@ -260,18 +328,6 @@ export function initDocumentViewer(state, storage) {
         mark.dataset.segmentId = segment.id;
         mark.dataset.codeId = segment.codeId;
         mark.title = code.name;
-
-        mark.addEventListener('click', (e) => {
-          e.stopPropagation();
-          state.set('ui.activeCodeId', segment.codeId, { trackDirty: false });
-        });
-
-        // Right-click to uncode
-        mark.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          showSegmentPopover(e, segment, code);
-        });
 
         highlightRange(range, mark);
 

@@ -15,6 +15,8 @@
 
 // ── Dialog Helpers & Utilities ──
 
+// ── Dialog Helpers & Utilities ──
+
 function uuid() {
   return crypto.randomUUID();
 }
@@ -979,7 +981,13 @@ async function parseSRT(file) {
   };
 }
 
-// extractSpeaker shared with vtt.js above (removed duplicate)
+function extractSpeaker(text) {
+  const match = text.match(/^([^:]{1,50}):\s*(.+)$/s);
+  if (match) {
+    return { speaker: match[1].trim(), text: match[2].trim() };
+  }
+  return { speaker: null, text: text.trim() };
+}
 
 // ── js/parsers/zoom-json.js ──
 
@@ -1062,9 +1070,13 @@ async function parseDOCX(file) {
  * followed by a speaker name line and text.
  */
 function isTeamsTranscript(text) {
-  const lines = text.split('\n').slice(0, 20);
+  const lines = text.split('\n').slice(0, 30);
   const tsPattern = /^\d+:\d+:\d+\.\d+\s*-->\s*\d+:\d+:\d+\.\d+/;
-  return lines.some(l => tsPattern.test(l.trim()));
+  // If content contains a WEBVTT header, it's pasted VTT content, not a Teams transcript
+  if (lines.some(l => l.trim() === 'WEBVTT')) return false;
+  // Require at least 2 timestamp lines to confirm it's actually a transcript
+  const matches = lines.filter(l => tsPattern.test(l.trim()));
+  return matches.length >= 2;
 }
 
 /**
@@ -2657,6 +2669,37 @@ function initDocumentViewer(state, storage) {
   // ── Text Selection ──
   function setupSelectionHandler() {
     viewer.addEventListener('mouseup', handleSelection);
+
+    // Delegated click handler for code highlights (works on cloned marks too)
+    contentRoot.addEventListener('click', (e) => {
+      const mark = e.target.closest('.code-highlight');
+      if (!mark) return;
+      e.stopPropagation();
+      const codeId = mark.dataset.codeId;
+      if (codeId) {
+        state.set('ui.activeCodeId', codeId, { trackDirty: false });
+      }
+    });
+
+    // Delegated contextmenu handler for code highlights
+    contentRoot.addEventListener('contextmenu', (e) => {
+      const mark = e.target.closest('.code-highlight');
+      if (!mark) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const segmentId = mark.dataset.segmentId;
+      const codeId = mark.dataset.codeId;
+      if (!segmentId || !codeId) return;
+
+      const codings = state.get(`codings.${currentSourceId}`);
+      const segment = codings?.segments?.find(s => s.id === segmentId);
+      const codes = state.get('codebook.codes') || [];
+      const code = codes.find(c => c.id === codeId);
+      if (segment && code) {
+        showSegmentPopover(e, segment, code);
+      }
+    });
   }
 
   function handleSelection() {
@@ -2677,10 +2720,19 @@ function initDocumentViewer(state, storage) {
     const startOffset = computeOffset(contentRoot, range.startContainer, range.startOffset);
     const endOffset = computeOffset(contentRoot, range.endContainer, range.endOffset);
 
+    // Reject if offset computation failed (node not found in document tree)
+    if (startOffset < 0 || endOffset < 0 || endOffset <= startOffset) return;
+
+    // Resolve container nodes to nearest element for closest() lookups
+    const startEl = range.startContainer.nodeType === Node.ELEMENT_NODE
+      ? range.startContainer : range.startContainer.parentElement;
+    const endEl = range.endContainer.nodeType === Node.ELEMENT_NODE
+      ? range.endContainer : range.endContainer.parentElement;
+
     // For transcripts, also capture cue info
     let cueInfo = null;
-    const startCue = range.startContainer.parentElement?.closest('.transcript-cue');
-    const endCue = range.endContainer.parentElement?.closest('.transcript-cue');
+    const startCue = startEl?.closest('.transcript-cue');
+    const endCue = endEl?.closest('.transcript-cue');
     if (startCue) {
       cueInfo = {
         startCueIndex: parseInt(startCue.dataset.cueIndex),
@@ -2690,7 +2742,7 @@ function initDocumentViewer(state, storage) {
 
     // For pages, capture page info
     let pageInfo = null;
-    const startPage = range.startContainer.parentElement?.closest('.doc-page');
+    const startPage = startEl?.closest('.doc-page');
     if (startPage) {
       pageInfo = { page: parseInt(startPage.dataset.page) };
     }
@@ -2712,6 +2764,31 @@ function initDocumentViewer(state, storage) {
   }
 
   function computeOffset(root, node, offset) {
+    // If node is an element (not a text node), resolve to equivalent text position.
+    // The Selection API can provide element nodes where offset is a child index.
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (offset < node.childNodes.length) {
+        node = node.childNodes[offset];
+        offset = 0;
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const inner = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+          if (inner.nextNode()) {
+            node = inner.currentNode;
+            offset = 0;
+          }
+        }
+      } else {
+        // Past all children — resolve to end of last text node within element
+        const inner = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+        let last = null;
+        while (inner.nextNode()) last = inner.currentNode;
+        if (last) {
+          node = last;
+          offset = last.textContent.length;
+        }
+      }
+    }
+
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     let charCount = 0;
     while (walker.nextNode()) {
@@ -2720,7 +2797,7 @@ function initDocumentViewer(state, storage) {
       }
       charCount += walker.currentNode.textContent.length;
     }
-    return charCount;
+    return -1;
   }
 
   // ── Highlight Rendering ──
@@ -2732,6 +2809,9 @@ function initDocumentViewer(state, storage) {
       parent.removeChild(el);
     });
     contentRoot.querySelectorAll('.highlight-tag').forEach(el => el.remove());
+
+    // Merge adjacent text nodes to prevent fragmentation from splitText calls
+    contentRoot.normalize();
 
     const codings = state.get(`codings.${currentSourceId}`);
     if (!codings || !codings.segments || codings.segments.length === 0) return;
@@ -2760,19 +2840,21 @@ function initDocumentViewer(state, storage) {
         mark.dataset.codeId = segment.codeId;
         mark.title = code.name;
 
-        mark.addEventListener('click', (e) => {
-          e.stopPropagation();
-          state.set('ui.activeCodeId', segment.codeId, { trackDirty: false });
-        });
-
-        // Right-click to uncode
-        mark.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          showSegmentPopover(e, segment, code);
-        });
-
         highlightRange(range, mark);
+
+        // Show note indicator if segment has a note attached
+        if (segment.noteId) {
+          const noteTag = document.createElement('span');
+          noteTag.className = 'highlight-tag highlight-note-tag';
+          noteTag.textContent = '\u{1F4DD}';
+          noteTag.title = 'View note';
+          noteTag.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            window.dispatchEvent(new CustomEvent('koali-edit-note', { detail: { noteId: segment.noteId } }));
+          });
+          mark.style.position = 'relative';
+          mark.appendChild(noteTag);
+        }
       } catch (e) {
         console.warn('Could not highlight segment:', segment.id, e.message);
       }
@@ -2780,6 +2862,7 @@ function initDocumentViewer(state, storage) {
   }
 
   function highlightRange(range, mark) {
+    // If surroundContents works (single text node), use it directly
     try {
       range.surroundContents(mark);
       return;
@@ -2802,6 +2885,7 @@ function initDocumentViewer(state, storage) {
       const clone = mark.cloneNode(false);
       let target = node;
 
+      // Trim to range boundaries for start/end nodes
       if (node === range.startContainer && range.startOffset > 0) {
         target = node.splitText(range.startOffset);
       }
@@ -2856,16 +2940,31 @@ function initDocumentViewer(state, storage) {
     popover.className = 'segment-popover';
     popover.style.left = e.clientX + 'px';
     popover.style.top = e.clientY + 'px';
+    const hasNote = !!segment.noteId;
     popover.innerHTML = `
       <div class="segment-popover-header">
         <span class="code-color" style="background:${code.color}"></span>
         <strong>${code.name}</strong>
       </div>
       <div class="segment-popover-text">${(segment.text || '').slice(0, 80)}${(segment.text || '').length > 80 ? '...' : ''}</div>
-      <button class="btn btn-small btn-danger segment-uncode-btn">Remove Code</button>
+      <div class="segment-popover-actions">
+        <button class="btn btn-small segment-note-btn">${hasNote ? 'View Note' : 'Add Note'}</button>
+        <button class="btn btn-small btn-danger segment-uncode-btn">Remove Code</button>
+      </div>
     `;
 
     document.body.appendChild(popover);
+
+    popover.querySelector('.segment-note-btn').addEventListener('click', () => {
+      popover.remove();
+      if (segment.noteId) {
+        window.dispatchEvent(new CustomEvent('koali-edit-note', { detail: { noteId: segment.noteId } }));
+      } else {
+        window.dispatchEvent(new CustomEvent('koali-new-note', {
+          detail: { segmentId: segment.id, sourceId: currentSourceId, segmentText: segment.text }
+        }));
+      }
+    });
 
     popover.querySelector('.segment-uncode-btn').addEventListener('click', () => {
       state.pushUndo();
@@ -3094,6 +3193,15 @@ function initCodePanel(state, storage) {
   // Listen for apply-code events from keyboard shortcuts
   window.addEventListener('koali-apply-code', (e) => {
     applyCode(e.detail.codeId);
+  });
+
+  // ── Selection Add Note ──
+  document.getElementById('selection-add-note').addEventListener('click', () => {
+    const sel = state.get('ui.selectedText');
+    if (!sel) return;
+    window.dispatchEvent(new CustomEvent('koali-new-note', {
+      detail: { sourceId: sel.sourceId, segmentText: sel.text }
+    }));
   });
 
   // ── Selection Context ──
@@ -3363,10 +3471,10 @@ function initCodePanel(state, storage) {
 
 function initNoteEditor(state, storage) {
   // Listen for note events
-  window.addEventListener('koali-new-note', () => openNoteModal());
+  window.addEventListener('koali-new-note', (e) => openNoteModal(null, e.detail || null));
   window.addEventListener('koali-edit-note', (e) => openNoteModal(e.detail.noteId));
 
-  function openNoteModal(noteId = null) {
+  function openNoteModal(noteId = null, segmentContext = null) {
     const modal = document.getElementById('modal-content');
     const existing = noteId ? state.get(`notes.items.${noteId}`) : null;
 
@@ -3398,6 +3506,7 @@ function initNoteEditor(state, storage) {
               <option value="">Standalone</option>
               <option value="code" ${existing?.linkedTo?.type === 'code' ? 'selected' : ''}>Code</option>
               <option value="source" ${existing?.linkedTo?.type === 'source' ? 'selected' : ''}>Document</option>
+              <option value="segment" ${existing?.linkedTo?.type === 'segment' || segmentContext?.segmentId ? 'selected' : ''}>Text Segment</option>
             </select>
           </div>
           <div class="form-group" style="flex:1" id="note-link-target-group">
@@ -3407,6 +3516,7 @@ function initNoteEditor(state, storage) {
             </select>
           </div>
         </div>
+        ${segmentContext?.segmentText ? `<div class="form-group"><label>Linked Text</label><div class="segment-excerpt">${escapeHtml(segmentContext.segmentText.slice(0, 200))}${segmentContext.segmentText.length > 200 ? '...' : ''}</div></div>` : ''}
         <div class="form-group">
           <label>Tags (comma-separated)</label>
           <input type="text" id="note-tags" value="${escapeAttr(existing?.tags?.join(', ') || '')}" placeholder="tag1, tag2..." />
@@ -3465,6 +3575,17 @@ function initNoteEditor(state, storage) {
       } else if (type === 'source') {
         linkTargetEl.innerHTML = '<option value="">Select document...</option>' +
           sources.map(s => `<option value="${s.id}" ${existing?.linkedTo?.id === s.id ? 'selected' : ''}>${escapeHtml(s.title)}</option>`).join('');
+      } else if (type === 'segment') {
+        // Show segments from the active source
+        const activeSourceId = segmentContext?.sourceId || existing?.linkedTo?.sourceId || state.get('sources.activeSourceId');
+        const codings = activeSourceId ? state.get(`codings.${activeSourceId}`) : null;
+        const segments = codings?.segments || [];
+        const preselectedId = segmentContext?.segmentId || existing?.linkedTo?.id;
+        linkTargetEl.innerHTML = '<option value="">Select segment...</option>' +
+          segments.map(s => {
+            const label = (s.text || '').slice(0, 60) + ((s.text || '').length > 60 ? '...' : '');
+            return `<option value="${s.id}" data-source-id="${activeSourceId}" ${s.id === preselectedId ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+          }).join('');
       } else {
         linkTargetEl.innerHTML = '<option value="">None</option>';
       }
@@ -3489,9 +3610,18 @@ function initNoteEditor(state, storage) {
       const linkTarget = linkTargetEl.value;
       const content = quill ? quill.root.innerHTML : document.getElementById('note-textarea')?.value || '';
 
-      const linkedTo = linkType && linkTarget ? { type: linkType, id: linkTarget } : null;
+      let linkedTo = null;
+      if (linkType && linkTarget) {
+        linkedTo = { type: linkType, id: linkTarget };
+        if (linkType === 'segment') {
+          // Also store sourceId for segment links
+          const selectedOption = linkTargetEl.selectedOptions[0];
+          linkedTo.sourceId = selectedOption?.dataset?.sourceId || segmentContext?.sourceId || state.get('sources.activeSourceId');
+        }
+      }
       const linkedNotes = Array.from(document.getElementById('note-linked-notes').selectedOptions).map(o => o.value);
 
+      let savedNoteId;
       if (existing) {
         // Update existing note
         const updated = {
@@ -3502,6 +3632,7 @@ function initNoteEditor(state, storage) {
         };
         const items = { ...state.get('notes.items'), [noteId]: updated };
         state.set('notes.items', items);
+        savedNoteId = noteId;
       } else {
         // Create new note
         const note = createNote(title, type, linkedTo, state.get('user.id'));
@@ -3512,6 +3643,20 @@ function initNoteEditor(state, storage) {
         const items = { ...state.get('notes.items'), [note.id]: note };
         state.set('notes.manifest', manifest);
         state.set('notes.items', items);
+        savedNoteId = note.id;
+      }
+
+      // Link note back to segment
+      if (linkedTo?.type === 'segment' && linkedTo.id && linkedTo.sourceId) {
+        const coding = state.get(`codings.${linkedTo.sourceId}`);
+        if (coding) {
+          const seg = coding.segments.find(s => s.id === linkedTo.id);
+          if (seg) {
+            seg.noteId = savedNoteId;
+            coding.modified = new Date().toISOString();
+            state.set(`codings.${linkedTo.sourceId}`, { ...coding });
+          }
+        }
       }
 
       close();
@@ -4750,11 +4895,15 @@ function renderMembers(project) {
 function initThemePanel(state, storage) {
   const container = document.getElementById('themes-panel');
   if (!container) return;
+  const expandedThemes = new Set();
 
   function render() {
     const themes = (state.get('themes.themes') || []).filter(t => !t.deleted);
     const codes = (state.get('codebook.codes') || []).filter(c => !c.deleted);
     const codings = state.get('codings') || {};
+    const sources = state.get('sources.manifest') || [];
+    const sourceMap = {};
+    for (const s of sources) sourceMap[s.id] = s;
 
     container.innerHTML = `
       <div class="themes-toolbar">
@@ -4765,12 +4914,52 @@ function initThemePanel(state, storage) {
         ${themes.map(theme => {
           const segments = getThemeSegments(theme, codings);
           const themeCodes = codes.filter(c => theme.codeIds.includes(c.id));
+          const isExpanded = expandedThemes.has(theme.id);
+          const codeMap = {};
+          for (const c of themeCodes) codeMap[c.id] = c;
+
+          // Group segments by code for expanded view
+          let segmentsHTML = '';
+          if (isExpanded && segments.length > 0) {
+            const groupedByCode = {};
+            for (const seg of segments) {
+              if (!groupedByCode[seg.codeId]) groupedByCode[seg.codeId] = [];
+              groupedByCode[seg.codeId].push(seg);
+            }
+            segmentsHTML = Object.entries(groupedByCode).map(([codeId, segs]) => {
+              const code = codeMap[codeId];
+              if (!code) return '';
+              return `
+                <div class="theme-segment-group" style="border-left-color:${code.color}">
+                  <div class="theme-segment-group-header">
+                    <span class="code-color" style="background:${code.color}"></span>
+                    ${escapeHtml(code.name)} <span class="theme-segment-count">(${segs.length})</span>
+                  </div>
+                  ${segs.map(seg => {
+                    const src = sourceMap[seg.sourceId];
+                    const text = (seg.text || '').slice(0, 150) + ((seg.text || '').length > 150 ? '...' : '');
+                    return `
+                      <div class="theme-segment-item" data-source-id="${seg.sourceId}" data-code-id="${seg.codeId}">
+                        <div class="theme-segment-text">&ldquo;${escapeHtml(text)}&rdquo;</div>
+                        <div class="theme-segment-meta">
+                          ${seg.speaker ? `<span class="theme-segment-speaker">${escapeHtml(seg.speaker)}</span> &middot; ` : ''}
+                          <span class="theme-segment-source">${escapeHtml(src?.title || 'Unknown source')}</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              `;
+            }).join('');
+          }
+
           return `
-            <div class="theme-card" data-theme-id="${theme.id}">
+            <div class="theme-card${isExpanded ? ' expanded' : ''}" data-theme-id="${theme.id}">
               <div class="theme-card-header">
                 <span class="theme-color-swatch" style="background:${theme.color}"></span>
                 <span class="theme-name">${escapeHtml(theme.name)}</span>
                 <span class="theme-stats">${themeCodes.length} codes &middot; ${segments.length} segments</span>
+                ${segments.length > 0 ? `<button class="theme-expand-btn" data-theme-id="${theme.id}" title="${isExpanded ? 'Collapse' : 'Explore segments'}">${isExpanded ? '&#9650;' : '&#9660;'}</button>` : ''}
               </div>
               ${theme.description ? `<div class="theme-description">${escapeHtml(theme.description)}</div>` : ''}
               <div class="theme-codes-list">
@@ -4783,6 +4972,7 @@ function initThemePanel(state, storage) {
                 `).join('')}
                 <button class="theme-add-code-btn btn btn-small" data-theme-id="${theme.id}">+ Add Code</button>
               </div>
+              ${isExpanded ? `<div class="theme-segments">${segmentsHTML}</div>` : ''}
             </div>
           `;
         }).join('')}
@@ -4841,6 +5031,32 @@ function initThemePanel(state, storage) {
           );
           state.set('themes.themes', themes);
         }
+      });
+    });
+
+    // Expand/collapse buttons
+    container.querySelectorAll('.theme-expand-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.themeId;
+        if (expandedThemes.has(id)) {
+          expandedThemes.delete(id);
+        } else {
+          expandedThemes.add(id);
+        }
+        render();
+      });
+    });
+
+    // Segment click → navigate to source and code
+    container.querySelectorAll('.theme-segment-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const sourceId = item.dataset.sourceId;
+        const codeId = item.dataset.codeId;
+        // Switch to coding tab and open source
+        document.querySelector('[data-tab="coding"]')?.click();
+        state.set('sources.activeSourceId', sourceId, { trackDirty: false });
+        state.set('ui.activeCodeId', codeId, { trackDirty: false });
       });
     });
   }
@@ -5215,272 +5431,6 @@ document.addEventListener('click', () => {
 
 // ── Init Home ──
 initProjectHome(state, storage);
-
-// ── Explorer Tab ──
-function initExplorer(state) {
-  const codeListEl = document.getElementById('explorer-code-list');
-  const filterEl = document.getElementById('explorer-code-filter');
-  const contentEl = document.getElementById('explorer-content');
-  const toolbarEl = document.getElementById('explorer-toolbar');
-  const selectedCodeIds = new Set();
-  let sortBy = 'source';
-  let mode = 'browse'; // browse | group
-  const themeGroups = []; // { name, color, codeIds[] }
-
-  function renderToolbar() {
-    toolbarEl.innerHTML = `
-      <button class="mode-btn ${mode === 'browse' ? 'active' : ''}" data-mode="browse">Browse</button>
-      <button class="mode-btn ${mode === 'group' ? 'active' : ''}" data-mode="group">Group into Themes</button>
-      <div class="explorer-sep"></div>
-      <label style="font-size:12px;color:var(--text-muted);">Sort:</label>
-      <select class="explorer-sort-select">
-        <option value="source" ${sortBy === 'source' ? 'selected' : ''}>Source</option>
-        <option value="date" ${sortBy === 'date' ? 'selected' : ''}>Date</option>
-        <option value="code" ${sortBy === 'code' ? 'selected' : ''}>Code</option>
-      </select>
-    `;
-    toolbarEl.querySelectorAll('.mode-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        mode = btn.dataset.mode;
-        renderToolbar();
-        renderCodeList();
-        renderContent();
-      });
-    });
-    toolbarEl.querySelector('.explorer-sort-select').addEventListener('change', (e) => {
-      sortBy = e.target.value;
-      renderContent();
-    });
-  }
-
-  function renderCodeList() {
-    const codes = (state.get('codebook.codes') || []).filter(c => !c.deleted);
-    const counts = countSegmentsByCode(state.get('codings') || {});
-    const filter = (filterEl.value || '').trim().toLowerCase();
-
-    codeListEl.innerHTML = '';
-    for (const code of codes) {
-      if (filter && !code.name.toLowerCase().includes(filter)) continue;
-      const count = counts[code.id] || 0;
-
-      const item = document.createElement('div');
-      item.className = 'explorer-code-item' + (selectedCodeIds.has(code.id) ? ' selected' : '');
-      if (mode === 'group') {
-        item.draggable = true;
-        item.dataset.codeId = code.id;
-      }
-      item.innerHTML = `
-        <span class="code-color" style="background:${code.color || '#999'}"></span>
-        <span class="code-name">${code.name}</span>
-        <span class="code-count">${count}</span>
-      `;
-      item.addEventListener('click', () => {
-        if (mode === 'browse') {
-          if (selectedCodeIds.has(code.id)) {
-            selectedCodeIds.delete(code.id);
-          } else {
-            selectedCodeIds.add(code.id);
-          }
-          renderCodeList();
-          renderContent();
-        }
-      });
-      if (mode === 'group') {
-        item.addEventListener('dragstart', (e) => {
-          e.dataTransfer.setData('text/plain', code.id);
-        });
-      }
-      codeListEl.appendChild(item);
-    }
-
-    if (codes.length === 0) {
-      codeListEl.innerHTML = '<div class="empty-state" style="padding:16px;font-size:13px;">No codes yet.</div>';
-    }
-  }
-
-  function getSegments() {
-    const codes = (state.get('codebook.codes') || []).filter(c => !c.deleted);
-    const codeMap = {};
-    for (const c of codes) codeMap[c.id] = c;
-
-    const allCodings = state.get('codings') || {};
-    const sources = state.get('sources.manifest') || [];
-    const sourceMap = {};
-    for (const s of sources) sourceMap[s.id] = s;
-
-    const segments = [];
-    for (const [sourceId, coding] of Object.entries(allCodings)) {
-      for (const seg of (coding.segments || [])) {
-        if (selectedCodeIds.has(seg.codeId)) {
-          const src = sourceMap[sourceId];
-          segments.push({ ...seg, sourceId, sourceName: src?.title || src?.originalName || src?.filename || sourceId });
-        }
-      }
-    }
-
-    if (sortBy === 'date') {
-      segments.sort((a, b) => (b.created || 0) - (a.created || 0));
-    } else if (sortBy === 'code') {
-      segments.sort((a, b) => (codeMap[a.codeId]?.name || '').localeCompare(codeMap[b.codeId]?.name || ''));
-    } else {
-      segments.sort((a, b) => a.sourceName.localeCompare(b.sourceName) || (a.start?.offset || 0) - (b.start?.offset || 0));
-    }
-    return { segments, codeMap };
-  }
-
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
-
-  function renderBrowse() {
-    if (selectedCodeIds.size === 0) {
-      contentEl.innerHTML = '<div class="empty-state">Select one or more codes from the left to explore segments.</div>';
-      return;
-    }
-
-    const { segments, codeMap } = getSegments();
-
-    if (segments.length === 0) {
-      contentEl.innerHTML = '<div class="empty-state">No segments found for the selected codes.</div>';
-      return;
-    }
-
-    contentEl.innerHTML = '';
-    for (const seg of segments) {
-      const code = codeMap[seg.codeId];
-      const card = document.createElement('div');
-      card.className = 'explorer-segment-card';
-      card.innerHTML = `
-        <div class="explorer-segment-meta">
-          <span class="explorer-segment-source">${escapeHtml(seg.sourceName)}</span>
-          ${seg.speaker ? `<span class="explorer-segment-speaker">${escapeHtml(seg.speaker)}</span>` : ''}
-        </div>
-        <div class="explorer-segment-text">${escapeHtml(seg.text || '')}</div>
-        <div>
-          <span class="explorer-segment-code-chip" style="background:${code?.color || '#999'}20;color:${code?.color || '#999'};border:1px solid ${code?.color || '#999'}40;">
-            ${code?.name || 'Unknown'}
-          </span>
-        </div>
-      `;
-      contentEl.appendChild(card);
-    }
-  }
-
-  function renderGroup() {
-    const codes = (state.get('codebook.codes') || []).filter(c => !c.deleted);
-    const codeMap = {};
-    for (const c of codes) codeMap[c.id] = c;
-
-    contentEl.innerHTML = '';
-
-    // Existing themes from state
-    const existingThemes = (state.get('themes.themes') || []).filter(t => !t.deleted);
-
-    // Render each theme group
-    for (const theme of existingThemes) {
-      contentEl.appendChild(renderGroupZone(theme, codeMap));
-    }
-
-    // New theme drop zone
-    const newZone = document.createElement('div');
-    newZone.className = 'explorer-group-zone';
-    newZone.innerHTML = '<span class="explorer-group-zone-label">Drop codes here to create a new theme...</span>';
-    newZone.addEventListener('dragover', (e) => { e.preventDefault(); newZone.classList.add('drag-over'); });
-    newZone.addEventListener('dragleave', () => newZone.classList.remove('drag-over'));
-    newZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      newZone.classList.remove('drag-over');
-      const codeId = e.dataTransfer.getData('text/plain');
-      if (!codeId || !codeMap[codeId]) return;
-
-      const name = prompt('Theme name:');
-      if (!name) return;
-      const theme = createTheme(name, '', null, [codeId], state.get('user.id'));
-      const themes = [...(state.get('themes.themes') || []), theme];
-      state.set('themes.themes', themes);
-      renderContent();
-    });
-    contentEl.appendChild(newZone);
-
-    // Stats
-    const stats = document.createElement('div');
-    stats.className = 'explorer-stats';
-    const assignedCount = new Set(existingThemes.flatMap(t => t.codeIds)).size;
-    stats.textContent = `${existingThemes.length} themes \u00B7 ${assignedCount} of ${codes.length} codes assigned`;
-    contentEl.appendChild(stats);
-  }
-
-  function renderGroupZone(theme, codeMap) {
-    const zone = document.createElement('div');
-    zone.className = 'explorer-group-zone';
-    zone.style.borderColor = theme.color || 'var(--border)';
-
-    const header = document.createElement('div');
-    header.style.cssText = 'width:100%;display:flex;align-items:center;gap:6px;margin-bottom:4px;';
-    header.innerHTML = `<span style="width:10px;height:10px;border-radius:3px;background:${theme.color || '#999'};flex-shrink:0;"></span>
-      <strong style="font-size:13px;">${escapeHtml(theme.name)}</strong>`;
-    zone.appendChild(header);
-
-    // Render code chips
-    for (const codeId of (theme.codeIds || [])) {
-      const code = codeMap[codeId];
-      if (!code) continue;
-      const chip = document.createElement('span');
-      chip.className = 'explorer-group-chip';
-      chip.innerHTML = `<span class="code-color" style="background:${code.color || '#999'};width:8px;height:8px;border-radius:2px;"></span>
-        ${escapeHtml(code.name)}
-        <span class="remove" title="Remove from theme">\u00D7</span>`;
-      chip.querySelector('.remove').addEventListener('click', () => {
-        const themes = state.get('themes.themes') || [];
-        const t = themes.find(th => th.id === theme.id);
-        if (t) {
-          t.codeIds = t.codeIds.filter(id => id !== codeId);
-          t.modified = new Date().toISOString();
-          state.set('themes.themes', [...themes]);
-          renderContent();
-        }
-      });
-      zone.appendChild(chip);
-    }
-
-    // Drop handler
-    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      const codeId = e.dataTransfer.getData('text/plain');
-      if (!codeId) return;
-      const themes = state.get('themes.themes') || [];
-      const t = themes.find(th => th.id === theme.id);
-      if (t && !t.codeIds.includes(codeId)) {
-        t.codeIds.push(codeId);
-        t.modified = new Date().toISOString();
-        state.set('themes.themes', [...themes]);
-        renderContent();
-      }
-    });
-
-    return zone;
-  }
-
-  function renderContent() {
-    if (mode === 'group') {
-      renderGroup();
-    } else {
-      renderBrowse();
-    }
-  }
-
-  filterEl.addEventListener('input', renderCodeList);
-  state.subscribe('codebook.codes', () => { renderCodeList(); renderContent(); });
-  state.subscribe('codings', () => { renderCodeList(); renderContent(); });
-  state.subscribe('themes.themes', () => { if (mode === 'group') renderContent(); });
-  renderToolbar();
-  renderCodeList();
-}
 
 // ── Workspace Init ──
 let workspaceInitialized = false;
