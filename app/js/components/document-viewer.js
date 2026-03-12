@@ -340,11 +340,13 @@ export function initDocumentViewer(state, storage) {
             const noteTag = document.createElement('span');
             noteTag.className = 'highlight-tag highlight-note-tag';
             noteTag.textContent = '\u{1F4DD}';
-            noteTag.title = 'View note';
+            noteTag.dataset.noteId = segment.noteId;
             noteTag.addEventListener('click', (ev) => {
               ev.stopPropagation();
               window.dispatchEvent(new CustomEvent('koali-edit-note', { detail: { noteId: segment.noteId } }));
             });
+            noteTag.addEventListener('mouseenter', (ev) => showNoteTooltip(ev, segment.noteId));
+            noteTag.addEventListener('mouseleave', hideNoteTooltip);
             domMark.style.position = 'relative';
             domMark.appendChild(noteTag);
           }
@@ -480,6 +482,49 @@ export function initDocumentViewer(state, storage) {
       }
     };
     setTimeout(() => document.addEventListener('click', closeHandler), 0);
+  }
+
+  // ── Note Tooltip ──
+  let noteTooltipEl = null;
+
+  function showNoteTooltip(e, noteId) {
+    hideNoteTooltip();
+    const note = state.get(`notes.items.${noteId}`);
+    if (!note) return;
+
+    noteTooltipEl = document.createElement('div');
+    noteTooltipEl.className = 'note-tooltip';
+
+    // Strip HTML tags for plain text preview
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = note.content || '';
+    const plainContent = tempDiv.textContent || tempDiv.innerText || '';
+    const preview = plainContent.slice(0, 200) + (plainContent.length > 200 ? '...' : '');
+
+    noteTooltipEl.innerHTML =
+      `<div class="note-tooltip-title">${escapeHtml(note.title || 'Untitled Note')}</div>` +
+      (preview ? `<div class="note-tooltip-content">${escapeHtml(preview)}</div>` : '') +
+      (note.type ? `<div class="note-tooltip-type">${escapeHtml(note.type)}</div>` : '');
+
+    document.body.appendChild(noteTooltipEl);
+
+    // Position near the badge
+    const rect = e.target.getBoundingClientRect();
+    noteTooltipEl.style.left = Math.min(rect.left, window.innerWidth - 320) + 'px';
+    noteTooltipEl.style.top = (rect.bottom + 6) + 'px';
+  }
+
+  function hideNoteTooltip() {
+    if (noteTooltipEl) {
+      noteTooltipEl.remove();
+      noteTooltipEl = null;
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
   }
 
   // ── Search ──

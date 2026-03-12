@@ -414,6 +414,38 @@ mark.code-highlight {
   z-index: 1;
 }
 
+/* Note tooltip on hover */
+.note-tooltip {
+  position: fixed;
+  z-index: 3000;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 8px 12px;
+  max-width: 300px;
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+.note-tooltip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.note-tooltip-content {
+  color: var(--text-secondary);
+  max-height: 120px;
+  overflow: hidden;
+}
+.note-tooltip-type {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* Segment text excerpt in note editor */
 .segment-excerpt {
   font-size: 12px;
@@ -495,6 +527,22 @@ mark.code-highlight {
   overflow-y: auto;
   margin-bottom: 8px;
   line-height: 1.4;
+}
+.selection-quick-actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.btn-note {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.btn-note:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
 .selection-actions { display: flex; flex-direction: column; gap: 6px; }
 
