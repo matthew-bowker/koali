@@ -333,16 +333,21 @@ export function initDocumentViewer(state, storage) {
 
         // Show note indicator if segment has a note attached
         if (segment.noteId) {
-          const noteTag = document.createElement('span');
-          noteTag.className = 'highlight-tag highlight-note-tag';
-          noteTag.textContent = '\u{1F4DD}';
-          noteTag.title = 'View note';
-          noteTag.addEventListener('click', (ev) => {
-            ev.stopPropagation();
-            window.dispatchEvent(new CustomEvent('koali-edit-note', { detail: { noteId: segment.noteId } }));
-          });
-          mark.style.position = 'relative';
-          mark.appendChild(noteTag);
+          // Find the first mark in the DOM (mark itself if surroundContents worked,
+          // otherwise the first clone from highlightRange's multi-node fallback)
+          const domMark = contentRoot.querySelector(`.code-highlight[data-segment-id="${segment.id}"]`);
+          if (domMark) {
+            const noteTag = document.createElement('span');
+            noteTag.className = 'highlight-tag highlight-note-tag';
+            noteTag.textContent = '\u{1F4DD}';
+            noteTag.title = 'View note';
+            noteTag.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              window.dispatchEvent(new CustomEvent('koali-edit-note', { detail: { noteId: segment.noteId } }));
+            });
+            domMark.style.position = 'relative';
+            domMark.appendChild(noteTag);
+          }
         }
       } catch (e) {
         console.warn('Could not highlight segment:', segment.id, e.message);

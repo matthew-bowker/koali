@@ -56,6 +56,7 @@ export function initProjectHome(state, storage) {
       state.set('sources', { manifest: [], activeSourceId: null });
       state.set('codings', {});
       state.set('notes', { manifest: [], items: {} });
+      state.set('themes', { version: 1, themes: [] });
       state.set('queries', { saved: [] });
       state.set('ui.view', 'workspace', { trackDirty: false });
 
@@ -79,6 +80,7 @@ export function initProjectHome(state, storage) {
       state.set('sources', data.sources);
       state.set('codings', data.codings);
       state.set('notes', data.notes);
+      state.set('themes', data.themes);
       state.set('queries', data.queries);
       state.set('conflicts', data.conflicts);
       state.set('ui.view', 'workspace', { trackDirty: false });
