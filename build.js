@@ -43,6 +43,7 @@ const SOURCE_FILES = [
   'js/components/conflict-resolver.js',
   'js/components/settings.js',
   'js/components/theme-panel.js',
+  'js/components/explorer.js',
   'js/components/project-home.js',
   'js/app.js',
 ];
